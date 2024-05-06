@@ -41,6 +41,7 @@ public class FontOutlineRetriever extends JFrame {
 
         // Load the font file
         Font font = Font.createFont(Font.TRUETYPE_FONT, new File(fontpath));
+        font = font.deriveFont(72f);
         char character = 'H';
         FontRenderContext frc = new FontRenderContext(null, true, true);
         GlyphVector glyphVector = font.createGlyphVector(frc, new char[]{character});
@@ -52,27 +53,27 @@ public class FontOutlineRetriever extends JFrame {
         List<Point2D> control_points = new ArrayList<>();
 
         PathIterator pathIterator = glyphOutline.getPathIterator(new AffineTransform());
-        float[] coords = new float[6];
+        double[] coords = new double[6];
 
-        float prev_pointX = 0.0f;
-        float prev_pointY = 0.0f;
+        double prev_pointX = 0.0f;
+        double prev_pointY = 0.0f;
         while (!pathIterator.isDone()) {
             int type = pathIterator.currentSegment(coords);
             if (type != PathIterator.SEG_CLOSE) {
                 if (type == PathIterator.SEG_MOVETO || type == PathIterator.SEG_LINETO) {
                     // These are outline points (either moving to or drawing a line to).
-                    outline_points.add(new Point2D.Float(coords[0], -coords[1]));
-                    all_points.add(new Point2D.Float(coords[0], -coords[1]));
+                    outline_points.add(new Point2D.Double(coords[0], -coords[1]));
+                    all_points.add(new Point2D.Double(coords[0], -coords[1]));
                     prev_pointX = coords[0];
                     prev_pointY = -coords[1];
                 } else if (type == PathIterator.SEG_CUBICTO) {
                     // The final coords in a CUBICTO are the actual new outline point.
-                    outline_points.add(new Point2D.Float(coords[4], -coords[5]));
+                    outline_points.add(new Point2D.Double(coords[4], -coords[5]));
                     // The first two pairs are control points.
-                    control_points.add(new Point2D.Float(coords[0], -coords[1]));
-                    control_points.add(new Point2D.Float(coords[2], -coords[3]));
+                    control_points.add(new Point2D.Double(coords[0], -coords[1]));
+                    control_points.add(new Point2D.Double(coords[2], -coords[3]));
 
-                    CubicCurve2D.Float curve = new CubicCurve2D.Float(
+                    CubicCurve2D.Double curve = new CubicCurve2D.Double(
                         prev_pointX, prev_pointY,
                         coords[0], -coords[1],
                         coords[2], -coords[3],
@@ -132,17 +133,17 @@ public class FontOutlineRetriever extends JFrame {
     public static ArrayList<Point2D> convertBezierToLineSegments(CubicCurve2D curve, double flatness) {
         ArrayList<Point2D> points = new ArrayList<>();
         PathIterator iterator = curve.getPathIterator(null, flatness);
-        float[] coords = new float[6];
-        Point2D.Float previousPoint = null;
+        double[] coords = new double[6];
+        Point2D.Double previousPoint = null;
 
         while (!iterator.isDone()) {
             int type = iterator.currentSegment(coords);
             switch (type) {
                 case PathIterator.SEG_MOVETO:
-                    previousPoint = new Point2D.Float(coords[0], coords[1]);
+                    previousPoint = new Point2D.Double(coords[0], coords[1]);
                     break;
                 case PathIterator.SEG_LINETO:
-                    Point2D.Float currentPoint = new Point2D.Float(coords[0], coords[1]);
+                    Point2D.Double currentPoint = new Point2D.Double(coords[0], coords[1]);
                     if (previousPoint != null) {
                         points.add(previousPoint); // Add start point of the segment
                         points.add(currentPoint);  // Add end point of the segment
