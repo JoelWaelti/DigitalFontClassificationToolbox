@@ -30,7 +30,8 @@ public class FontOutlineRetriever extends JFrame {
 
     public static void main(String[] args) {
         try {
-            FontOutlineRetriever frame = new FontOutlineRetriever("/Users/julielhote/FHNW/Fonts/skript_reg/KulukundisITCStd.otf");
+            String fontPath = args[0];
+            FontOutlineRetriever frame = new FontOutlineRetriever(fontPath);
             frame.setVisible(true);
         } catch (IOException | FontFormatException e) {
             e.printStackTrace();
@@ -181,14 +182,10 @@ public class FontOutlineRetriever extends JFrame {
     }
 
     public static double distanceNearestIntersection(Line2D currentLine, List<Point2D> allPoints, Rectangle2D boundingBox) {
-        // Calculate slope (Steigung)
-        double currentSlope = 0; //TODO infinity überlegung
-        if(currentLine.getX2() - currentLine.getX1() != 0) currentSlope = (currentLine.getY2() - currentLine.getY1())/(currentLine.getX2() - currentLine.getX1());
-
         // Calculate point at the middle of the line
         Point2D centerPoint = new Point2D.Double((currentLine.getX1() + currentLine.getX2()) / 2, (currentLine.getY1() + currentLine.getY2()) / 2);
 
-        Line2D perpendicularLine = getPerpendicularLine(currentLine, currentSlope, centerPoint, boundingBox);
+        Line2D perpendicularLine = getPerpendicularLine(currentLine, centerPoint, boundingBox);
         System.out.println(perpendicularLine.getX1() + ", " + perpendicularLine.getY1());
         System.out.println(perpendicularLine.getX2() + ", " +  perpendicularLine.getY2());
 
@@ -230,64 +227,17 @@ public class FontOutlineRetriever extends JFrame {
         return distanceNearestIntersectionPoint;
     }
 
-    public static Line2D getPerpendicularLine(Line2D line, double lineSlope, Point2D centerPoint, Rectangle2D boundingBox) {
-        double endpointPerpendicularLineX = centerPoint.getX();
-        double endpointPerpendicularLineY = centerPoint.getY();
-
-        // calculate slope of perp. line
-        double perpendicularSlope = 0; // TODO infinity überlegung >> Wenn lineSlope == 0, dass heisst wenn line vertical oder horizontal
-        if(lineSlope != 0) perpendicularSlope = (-1) / lineSlope;
-
-        // calculate y-axis-intersection --> y = mx + b
-        double b = centerPoint.getY() - perpendicularSlope * centerPoint.getX();
-
+    public static Line2D getPerpendicularLine(Line2D line, Point2D centerPoint, Rectangle2D boundingBox) {
         double diffX = line.getX2() - line.getX1();
         double diffY = line.getY2() - line.getY1();
 
-        boolean horizontalMoveRight = diffY == 0 && diffX > 0;
-        boolean horizontalMoveLeft = diffY == 0 && 0 > diffX;
-        boolean verticalMoveUp = diffX == 0 && diffY > 0;
-        boolean verticalMoveDown = diffX == 0 && 0 > diffY;
-        boolean northEastMove = diffX > 0 && diffY > 0;
-        boolean southWestMove = 0 > diffX && 0 > diffY;
-        boolean southEastMove = diffX > 0 && 0 > diffY;
-        boolean northWestMove = 0 > diffX && diffY > 0;
+        double normalizedVecLength = Math.sqrt(diffX*diffX + diffY*diffY);
+        Point2D normalizedVec = new Point2D.Double(diffX/normalizedVecLength, diffY/normalizedVecLength);
+        Point2D rotatedVec = new Point2D.Double(-normalizedVec.getY(), normalizedVec.getX());
 
-        if(horizontalMoveRight) {
-            System.out.println("horizontalMoveRight");
-            endpointPerpendicularLineX = centerPoint.getX();
-            endpointPerpendicularLineY = boundingBox.getMinY() * -1; // MaxY
-        } else if(horizontalMoveLeft) {
-            System.out.println("horizontalMoveLeft");
-            endpointPerpendicularLineY = boundingBox.getMaxY() * -1; // MinY
-            endpointPerpendicularLineX = centerPoint.getX();
-        } else if(verticalMoveUp) {
-            System.out.println("verticalMoveUp");
-            endpointPerpendicularLineX = boundingBox.getMinX(); // MinX
-            endpointPerpendicularLineY = centerPoint.getY();
-        } else if(verticalMoveDown) {
-            System.out.println("verticalMoveDown");
-            endpointPerpendicularLineX = boundingBox.getMaxX(); // MaxX
-            endpointPerpendicularLineY = centerPoint.getY();
-        } else if(northEastMove) {
-            System.out.println("NE");
-            endpointPerpendicularLineX = boundingBox.getMinX();
-            endpointPerpendicularLineY = endpointPerpendicularLineX * perpendicularSlope + b; // lineSlope & perpendicularSlope never Zero
-        } else if(southWestMove) {
-            System.out.println("SW");
-            endpointPerpendicularLineX = boundingBox.getMaxX();
-            endpointPerpendicularLineY = endpointPerpendicularLineX * perpendicularSlope + b; // lineSlope & perpendicularSlope never Zero
-        } else if(southEastMove) {
-            System.out.println("SE");
-            endpointPerpendicularLineX = boundingBox.getMaxX();
-            endpointPerpendicularLineY = endpointPerpendicularLineX * perpendicularSlope + b; // lineSlope & perpendicularSlope never Zero
-        } else if(northWestMove) {
-            System.out.println("NW");
-            endpointPerpendicularLineX = boundingBox.getMinX();
-            endpointPerpendicularLineY = endpointPerpendicularLineX * perpendicularSlope + b; // lineSlope & perpendicularSlope never Zero
-        }
+        double scaling = boundingBox.getHeight() + boundingBox.getWidth();
+        Point2D endPoint = new Point2D.Double(rotatedVec.getX() * scaling + centerPoint.getX(), rotatedVec.getY() * scaling + centerPoint.getY());
 
-        Point2D endPoint = new Point2D.Double(endpointPerpendicularLineX, endpointPerpendicularLineY);
         return new Line2D.Double(centerPoint, endPoint);
     }
 
