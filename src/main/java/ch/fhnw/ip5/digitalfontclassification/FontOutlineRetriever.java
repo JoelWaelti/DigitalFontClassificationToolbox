@@ -235,7 +235,7 @@ public class FontOutlineRetriever extends JFrame {
         double endpointPerpendicularLineY = centerPoint.getY();
 
         // calculate slope of perp. line
-        double perpendicularSlope = 0; // TODO infinity überlegung
+        double perpendicularSlope = 0; // TODO infinity überlegung >> Wenn lineSlope == 0, dass heisst wenn line vertical oder horizontal
         if(lineSlope != 0) perpendicularSlope = (-1) / lineSlope;
 
         // calculate y-axis-intersection --> y = mx + b
@@ -248,6 +248,10 @@ public class FontOutlineRetriever extends JFrame {
         boolean horizontalMoveLeft = diffY == 0 && 0 > diffX;
         boolean verticalMoveUp = diffX == 0 && diffY > 0;
         boolean verticalMoveDown = diffX == 0 && 0 > diffY;
+        boolean northEastMove = diffX > 0 && diffY > 0;
+        boolean southWestMove = 0 > diffX && 0 > diffY;
+        boolean southEastMove = diffX > 0 && 0 > diffY;
+        boolean northWestMove = 0 > diffX && diffY > 0;
 
         if(horizontalMoveRight) {
             System.out.println("horizontalMoveRight");
@@ -261,26 +265,26 @@ public class FontOutlineRetriever extends JFrame {
             System.out.println("verticalMoveUp");
             endpointPerpendicularLineX = boundingBox.getMinX(); // MinX
             endpointPerpendicularLineY = centerPoint.getY();
-        } else if(verticalMoveDown ) {
+        } else if(verticalMoveDown) {
             System.out.println("verticalMoveDown");
             endpointPerpendicularLineX = boundingBox.getMaxX(); // MaxX
             endpointPerpendicularLineY = centerPoint.getY();
-        } else if(diffX > 0 && diffY > 0) {
-            System.out.println("NO");
+        } else if(northEastMove) {
+            System.out.println("NE");
             endpointPerpendicularLineX = boundingBox.getMinX();
-            endpointPerpendicularLineY = linearEquationGetY(endpointPerpendicularLineX, perpendicularSlope, b);
-        } else if(0 > diffX && 0 > diffY) {
+            endpointPerpendicularLineY = endpointPerpendicularLineX * perpendicularSlope + b; // lineSlope & perpendicularSlope never Zero
+        } else if(southWestMove) {
             System.out.println("SW");
             endpointPerpendicularLineX = boundingBox.getMaxX();
-            endpointPerpendicularLineY = linearEquationGetY(endpointPerpendicularLineX, perpendicularSlope, b);
-        } else if(diffX > 0 && 0 > diffY) {
-            System.out.println("SO");
+            endpointPerpendicularLineY = endpointPerpendicularLineX * perpendicularSlope + b; // lineSlope & perpendicularSlope never Zero
+        } else if(southEastMove) {
+            System.out.println("SE");
             endpointPerpendicularLineX = boundingBox.getMaxX();
-            endpointPerpendicularLineY = linearEquationGetY(endpointPerpendicularLineX, perpendicularSlope, b);
-        } else if(0 > diffX && diffY > 0) {
+            endpointPerpendicularLineY = endpointPerpendicularLineX * perpendicularSlope + b; // lineSlope & perpendicularSlope never Zero
+        } else if(northWestMove) {
             System.out.println("NW");
             endpointPerpendicularLineX = boundingBox.getMinX();
-            endpointPerpendicularLineY = linearEquationGetY(endpointPerpendicularLineX, perpendicularSlope, b);
+            endpointPerpendicularLineY = endpointPerpendicularLineX * perpendicularSlope + b; // lineSlope & perpendicularSlope never Zero
         }
 
         Point2D endPoint = new Point2D.Double(endpointPerpendicularLineX, endpointPerpendicularLineY);
@@ -312,9 +316,5 @@ public class FontOutlineRetriever extends JFrame {
         double intersectY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom;
 
         return new Point2D.Double(intersectX, intersectY);
-    }
-
-    public static double linearEquationGetY(double x, double slope, double c) {
-        return slope * x + c;
     }
 }
