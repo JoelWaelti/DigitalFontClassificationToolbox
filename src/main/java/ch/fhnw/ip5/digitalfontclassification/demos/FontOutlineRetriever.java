@@ -1,4 +1,4 @@
-package ch.fhnw.ip5.digitalfontclassification;
+package ch.fhnw.ip5.digitalfontclassification.demos;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;

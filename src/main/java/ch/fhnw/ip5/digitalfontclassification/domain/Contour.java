@@ -1,4 +1,4 @@
-package ch.fhnw.ip5.digitalfontclassification;
+package ch.fhnw.ip5.digitalfontclassification.domain;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

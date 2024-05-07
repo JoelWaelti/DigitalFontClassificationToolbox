@@ -1,4 +1,6 @@
-package ch.fhnw.ip5.digitalfontclassification;
+package ch.fhnw.ip5.digitalfontclassification.domain;
+
+import ch.fhnw.ip5.digitalfontclassification.domain.*;
 
 import java.awt.geom.CubicCurve2D;
 import java.awt.geom.PathIterator;

@@ -1,6 +1,4 @@
-package ch.fhnw.ip5.digitalfontclassification;
-
-import java.util.List;
+package ch.fhnw.ip5.digitalfontclassification.domain;
 
 public interface FontParser {
     String getFontName();

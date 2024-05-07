@@ -1,4 +1,6 @@
-package ch.fhnw.ip5.digitalfontclassification;
+package ch.fhnw.ip5.digitalfontclassification.domain;
+
+import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 
 public abstract class Segment {
     private Point from;

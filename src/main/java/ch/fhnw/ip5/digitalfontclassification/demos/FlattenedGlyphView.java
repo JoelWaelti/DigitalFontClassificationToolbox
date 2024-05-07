@@ -1,4 +1,7 @@
-package ch.fhnw.ip5.digitalfontclassification;
+package ch.fhnw.ip5.digitalfontclassification.demos;
+
+import ch.fhnw.ip5.digitalfontclassification.domain.*;
+import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,13 +24,13 @@ public class FlattenedGlyphView extends JPanel {
 
         List<Contour> contours = glyph.getContours();
         for (Contour contour : contours) {
-            List<Point> outlinePoints = contour.getOutlinePoints();
+            List<ch.fhnw.ip5.digitalfontclassification.domain.Point> outlinePoints = contour.getOutlinePoints();
 
             // Draw segments connecting outline points
             g2d.setColor(Color.BLACK);
             List<Segment> segments = contour.getSegments();
             for (Segment segment : segments) {
-                Point from = segment.getFrom();
+                ch.fhnw.ip5.digitalfontclassification.domain.Point from = segment.getFrom();
                 Point to = segment.getTo();
                 g2d.drawLine((int) from.getX(), (int) from.getY(), (int) to.getX(), (int) to.getY());
             }

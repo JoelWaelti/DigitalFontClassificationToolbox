@@ -1,4 +1,7 @@
-package ch.fhnw.ip5.digitalfontclassification;
+package ch.fhnw.ip5.digitalfontclassification.domain;
+
+import ch.fhnw.ip5.digitalfontclassification.domain.Point;
+import ch.fhnw.ip5.digitalfontclassification.domain.Segment;
 
 public class CubicBezierCurve extends Segment {
     private Point control1;
