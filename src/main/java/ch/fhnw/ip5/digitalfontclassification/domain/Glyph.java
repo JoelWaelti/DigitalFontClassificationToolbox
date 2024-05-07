@@ -14,6 +14,7 @@ public class Glyph {
         this.character = character;
         this.fontSize = fontSize;
         this.contours = contours;
+        this.boundingBox = boundingBox;
     }
 
     public List<Contour> getContours() {
