@@ -6,7 +6,10 @@ import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+
+import static ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer.computeThicknessAlongPathAtMiddleOfSegments;
 
 public class FlattenedGlyphView extends JPanel {
     private Glyph glyph;
@@ -52,6 +55,9 @@ public class FlattenedGlyphView extends JPanel {
                 .mapToInt(contour -> contour.getSegments().size())
                 .sum()
         );
+
+        ArrayList<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(flattenedGlyph);
+        System.out.println(thicknesses);
 
         JFrame frame = new JFrame();
         frame.setSize(400, 400);

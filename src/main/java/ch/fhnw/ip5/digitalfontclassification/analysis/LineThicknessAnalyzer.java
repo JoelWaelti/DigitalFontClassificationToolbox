@@ -18,6 +18,7 @@ public class LineThicknessAnalyzer {
             }
 
             double thickness = thicknessAtMiddleOfSegment(line, glyph);
+            //System.out.println();
             thicknesses.add(thickness);
         }
 
@@ -43,12 +44,13 @@ public class LineThicknessAnalyzer {
                     continue;
                 }
 
-                if(!(s instanceof Line l)) {
+                if(!(s instanceof Line)) {
                     throw new IllegalArgumentException("Contours of the glyph can only contain lines for this operation. Consider flattening the entire glyph.");
                 }
 
-                Point intersection = getLineLineIntersection(line, l);
+                Point intersection = getLineLineIntersection(perpendicularLine, (Line) s);
                 if(intersection != null) {
+                    //System.out.println("intersection: " + intersection);
                     double dist = intersection.distanceTo(center);
                     if(dist < distanceToNearestIntersection) {
                         distanceToNearestIntersection = dist;
@@ -61,6 +63,7 @@ public class LineThicknessAnalyzer {
             distanceToNearestIntersection = -1;
         }
 
+        //System.out.println(distanceToNearestIntersection);
         return distanceToNearestIntersection;
     }
 
@@ -89,7 +92,6 @@ public class LineThicknessAnalyzer {
 
             return new Point(intersectX, intersectY);
         }
-
         return null;
     }
 }

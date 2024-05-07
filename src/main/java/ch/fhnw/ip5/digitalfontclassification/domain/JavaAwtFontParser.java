@@ -21,6 +21,7 @@ public class JavaAwtFontParser implements FontParser {
     private final FontRenderContext frc;
 
     public JavaAwtFontParser(String fontPath) throws IOException, FontFormatException {
+        System.out.println(fontPath);
         defaultFont = Font.createFont(java.awt.Font.TRUETYPE_FONT, new File(fontPath));
         frc = new FontRenderContext(null, true, true);
     }

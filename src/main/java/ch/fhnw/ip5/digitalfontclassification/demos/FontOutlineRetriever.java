@@ -31,6 +31,7 @@ public class FontOutlineRetriever extends JFrame {
     public static void main(String[] args) {
         try {
             String fontPath = args[0];
+            System.out.println(fontPath);
             FontOutlineRetriever frame = new FontOutlineRetriever(fontPath);
             frame.setVisible(true);
         } catch (IOException | FontFormatException e) {
@@ -95,7 +96,6 @@ public class FontOutlineRetriever extends JFrame {
 
         System.out.println(outline_points.size());
         System.out.println(all_points.size());
-        System.out.println(all_points);
 
         ArrayList<Double> allDistances = new ArrayList<>();
 
