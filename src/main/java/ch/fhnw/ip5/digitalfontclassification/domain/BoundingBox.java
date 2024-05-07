@@ -13,6 +13,14 @@ public class BoundingBox {
         this.maxY = maxY;
     }
 
+    public double getWidth() {
+        return maxX - minX;
+    }
+
+    public double getHeight() {
+        return maxY - minY;
+    }
+
     public double getMinX() {
         return minX;
     }
