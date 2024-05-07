@@ -21,7 +21,7 @@ public class JavaAwtFlattener implements Flattener {
         for(Contour contour : glyph.getContours()) {
             flattenedContours.add(flatten(contour));
         }
-        return new Glyph(glyph.getCharacter(), glyph.getFontSize(), flattenedContours);
+        return new Glyph(glyph.getCharacter(), glyph.getFontSize(), flattenedContours, glyph.getBoundingBox());
     }
 
     @Override
