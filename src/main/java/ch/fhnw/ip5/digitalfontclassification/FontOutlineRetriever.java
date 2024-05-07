@@ -5,8 +5,10 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.CubicCurve2D;
+import java.awt.geom.Line2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +30,7 @@ public class FontOutlineRetriever extends JFrame {
 
     public static void main(String[] args) {
         try {
-            FontOutlineRetriever frame = new FontOutlineRetriever("/Users/julielhote/FHNW/Fonts/skript_reg/AmadeoStd.otf");
+            FontOutlineRetriever frame = new FontOutlineRetriever("/Users/julielhote/FHNW/Fonts/grotesk_reg/AntiqueOlivePro-Light.otf");
             frame.setVisible(true);
         } catch (IOException | FontFormatException e) {
             e.printStackTrace();
@@ -80,7 +82,7 @@ public class FontOutlineRetriever extends JFrame {
                         coords[4], -coords[5]
                     );
 
-                    List<Point2D> lineSegments = convertBezierToLineSegments(curve, 0.001);
+                    List<Point2D> lineSegments = convertBezierToLineSegments(curve, 0.1);
                     all_points.addAll(lineSegments);
 
                     prev_pointX = coords[4];
@@ -90,8 +92,25 @@ public class FontOutlineRetriever extends JFrame {
             pathIterator.next();
         }
 
+        System.out.println(outline_points.size());
         System.out.println(all_points.size());
-        System.out.println(control_points.size());
+        System.out.println(all_points);
+
+        ArrayList<Double> allDistances = new ArrayList<>();
+
+        for(int i = 1; i < all_points.size(); i++) {
+            Point2D start = all_points.get(i-1);
+            Point2D end = all_points.get(i);
+
+            System.out.println("startPoint:" + start);
+            System.out.println("endPoint:" + end);
+
+            Line2D currLine = new Line2D.Double(start, end);
+            double distanceToPerpendicularPoint = distanceNearestIntersection(currLine, all_points, glyphOutline.getBounds());
+            allDistances.add(distanceToPerpendicularPoint);
+        }
+
+        System.out.println(allDistances);
 
         XYSeries outline_series = new XYSeries("Glyph Outline");
         for (Point2D point : outline_points) {
@@ -141,11 +160,12 @@ public class FontOutlineRetriever extends JFrame {
             switch (type) {
                 case PathIterator.SEG_MOVETO:
                     previousPoint = new Point2D.Double(coords[0], coords[1]);
+
                     break;
                 case PathIterator.SEG_LINETO:
                     Point2D.Double currentPoint = new Point2D.Double(coords[0], coords[1]);
                     if (previousPoint != null) {
-                        points.add(previousPoint); // Add start point of the segment
+                        //points.add(previousPoint); // Add start point of the segment
                         points.add(currentPoint);  // Add end point of the segment
                     }
                     previousPoint = currentPoint; // Update the previous point
@@ -154,13 +174,135 @@ public class FontOutlineRetriever extends JFrame {
             iterator.next();
         }
 
-        System.out.println(points.size());
-        for (int i = 0; i < points.size(); i += 2) {
-            Point2D start = points.get(i);
-            Point2D end = points.get(i + 1);
-            System.out.println("Segment from (" + start.getX() + ", " + start.getY() + ") to (" + end.getX() + ", " + end.getY() + ")");
+        return points;
+    }
+
+    public static double distanceNearestIntersection(Line2D currentLine, List<Point2D> allPoints, Rectangle2D boundingBox) {
+        double currentSlope = 0;
+        if(currentLine.getX2() - currentLine.getX1() != 0) currentSlope = (currentLine.getY2() - currentLine.getY1())/(currentLine.getX2() - currentLine.getX1());
+
+
+        Point2D centerPoint = new Point2D.Double((currentLine.getX1() + currentLine.getX2()) / 2, (currentLine.getY1() + currentLine.getY2()) / 2);
+        Line2D perpendicularLine = getPerpendicularLine(currentLine, currentSlope, centerPoint, boundingBox);
+        System.out.println(perpendicularLine.getX1() + ", " + perpendicularLine.getY1());
+        System.out.println(perpendicularLine.getX2() + ", " +  perpendicularLine.getY2());
+
+
+        ArrayList<Point2D> intersections = new ArrayList<>();
+
+        for(int i = 1; i < allPoints.size(); i++) {
+            Point2D start = allPoints.get(i-1);
+            Point2D end = allPoints.get(i);
+            Line2D line = new Line2D.Double(start.getX(), start.getY(), end.getX(), end.getY());
+
+            if(perpendicularLine.intersectsLine(line)) {
+                Point2D intersection = getIntersection(perpendicularLine, line);
+                System.out.println("intersection: " + intersection);
+                intersections.add(intersection);
+            }
         }
 
-        return points;
+        System.out.println();
+
+        double distanceNearestIntersectionPoint = Double.MAX_VALUE;
+        for(Point2D point : intersections) {
+            double tempDistance = centerPoint.distance(point);
+            if(tempDistance > 0 && distanceNearestIntersectionPoint > tempDistance) {
+                distanceNearestIntersectionPoint = tempDistance;
+            }
+        }
+
+        if (distanceNearestIntersectionPoint == Double.MAX_VALUE) {
+            distanceNearestIntersectionPoint = 0;
+        }
+
+        return distanceNearestIntersectionPoint;
+    }
+
+    public static Line2D getPerpendicularLine(Line2D line, double lineSlope, Point2D centerPoint, Rectangle2D boundingBox) {
+        double x = centerPoint.getX();
+        double y = centerPoint.getY();
+
+        double perpendicularSlope = 0;
+        if(lineSlope != 0) perpendicularSlope = (-1) / lineSlope;
+        double c = centerPoint.getY() - perpendicularSlope * centerPoint.getX();
+
+        double diffX = line.getX2() - line.getX1();
+        System.out.println("diffX: " + diffX);
+        double diffY = line.getY2() - line.getY1();
+        System.out.println("diffY: " + diffY);
+
+        boolean horizontalMoveRight = diffY == 0 && diffX > 0;
+        boolean horizontalMoveLeft = diffY == 0 && 0 > diffX;
+        boolean verticalMoveUp = diffX == 0 && diffY > 0;
+        boolean verticalMoveDown = diffX == 0 && 0 > diffY;
+
+        if(horizontalMoveRight) {
+            System.out.println("horizontalMoveRight");
+            y = boundingBox.getMinY() * -1; // MaxY
+            x = linearEquationGetX(y, perpendicularSlope, c);
+        } else if(horizontalMoveLeft) {
+            System.out.println("horizontalMoveLeft");
+            y = boundingBox.getMaxY() * -1; // MinY
+            x = linearEquationGetX(y, perpendicularSlope, c);
+        } else if(verticalMoveUp) {
+            System.out.println("verticalMoveUp");
+            x = boundingBox.getMinX(); // MinX
+            y = linearEquationGetY(x, perpendicularSlope, c);
+        } else if(verticalMoveDown ) {
+            System.out.println("verticalMoveDown");
+            x = boundingBox.getMaxX(); // MaxX
+            y = linearEquationGetY(x, perpendicularSlope, c);
+        } else if(diffX > 0 && diffY > 0) {
+            x = boundingBox.getMinX();
+            y = linearEquationGetY(x, perpendicularSlope, c);
+        } else if(0 > diffX && 0 > diffY) {
+            x = boundingBox.getMaxX();
+            y = linearEquationGetY(x, perpendicularSlope, c);
+        } else if(diffX > 0 && 0 > diffY) {
+            x = boundingBox.getMaxX();
+            y = linearEquationGetY(x, perpendicularSlope, c);
+        } else if(0 > diffX && diffY > 0) {
+            x = boundingBox.getMinX();
+            y = linearEquationGetY(x, perpendicularSlope, c);
+        }
+
+        Point2D endPoint = new Point2D.Double(x, y);
+        return new Line2D.Double(centerPoint, endPoint);
+    }
+
+    public static Point2D getIntersection(Line2D line0, Line2D line1) {
+        // Line 1
+        double x1 = line0.getX1();
+        double y1 = line0.getY1();
+        double x2 = line0.getX2();
+        double y2 = line0.getY2();
+
+        // Line 2
+        double x3 = line1.getX1();
+        double y3 = line1.getY1();
+        double x4 = line1.getX2();
+        double y4 = line1.getY2();
+
+        // Denominator for the equations of the lines
+        double denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+        if (denom == 0) {
+            return null; // Lines are parallel or coincident
+        }
+
+        // Intersection point
+        double intersectX = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denom;
+        double intersectY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom;
+
+        return new Point2D.Double(intersectX, intersectY);
+    }
+
+    public static double linearEquationGetX(double y, double slope, double c) {
+        if(slope == 0) return 0.0;
+        else return (y - c) / slope;
+    }
+    public static double linearEquationGetY(double x, double slope, double c) {
+        return slope * x + c;
     }
 }
