@@ -30,7 +30,7 @@ public class FontOutlineRetriever extends JFrame {
 
     public static void main(String[] args) {
         try {
-            FontOutlineRetriever frame = new FontOutlineRetriever("/Users/julielhote/FHNW/Fonts/grotesk_reg/AntiqueOlivePro-Light.otf");
+            FontOutlineRetriever frame = new FontOutlineRetriever("/Users/julielhote/FHNW/Fonts/skript_reg/KulukundisITCStd.otf");
             frame.setVisible(true);
         } catch (IOException | FontFormatException e) {
             e.printStackTrace();
@@ -129,7 +129,7 @@ public class FontOutlineRetriever extends JFrame {
 
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(all_points_series);
-        dataset.addSeries(control_series);
+        //dataset.addSeries(control_series);
         JFreeChart chart = ChartFactory.createScatterPlot(
             "Outline of Character '" + character + "'",
             "X", "Y",
@@ -202,12 +202,12 @@ public class FontOutlineRetriever extends JFrame {
             }
         }
 
-        System.out.println();
-
         double distanceNearestIntersectionPoint = Double.MAX_VALUE;
-        for(Point2D point : intersections) {
+        double tolerance = 1e-10; // Define a small tolerance value, adjust as necessary
+
+        for (Point2D point : intersections) {
             double tempDistance = centerPoint.distance(point);
-            if(tempDistance > 0 && distanceNearestIntersectionPoint > tempDistance) {
+            if (tempDistance > tolerance && distanceNearestIntersectionPoint > tempDistance) {
                 distanceNearestIntersectionPoint = tempDistance;
             }
         }
@@ -215,6 +215,9 @@ public class FontOutlineRetriever extends JFrame {
         if (distanceNearestIntersectionPoint == Double.MAX_VALUE) {
             distanceNearestIntersectionPoint = 0;
         }
+
+        System.out.println(distanceNearestIntersectionPoint);
+        System.out.println();
 
         return distanceNearestIntersectionPoint;
     }
@@ -228,9 +231,7 @@ public class FontOutlineRetriever extends JFrame {
         double c = centerPoint.getY() - perpendicularSlope * centerPoint.getX();
 
         double diffX = line.getX2() - line.getX1();
-        System.out.println("diffX: " + diffX);
         double diffY = line.getY2() - line.getY1();
-        System.out.println("diffY: " + diffY);
 
         boolean horizontalMoveRight = diffY == 0 && diffX > 0;
         boolean horizontalMoveLeft = diffY == 0 && 0 > diffX;
@@ -240,11 +241,11 @@ public class FontOutlineRetriever extends JFrame {
         if(horizontalMoveRight) {
             System.out.println("horizontalMoveRight");
             y = boundingBox.getMinY() * -1; // MaxY
-            x = linearEquationGetX(y, perpendicularSlope, c);
+            x = centerPoint.getX();
         } else if(horizontalMoveLeft) {
             System.out.println("horizontalMoveLeft");
             y = boundingBox.getMaxY() * -1; // MinY
-            x = linearEquationGetX(y, perpendicularSlope, c);
+            x = centerPoint.getX();
         } else if(verticalMoveUp) {
             System.out.println("verticalMoveUp");
             x = boundingBox.getMinX(); // MinX
@@ -254,15 +255,19 @@ public class FontOutlineRetriever extends JFrame {
             x = boundingBox.getMaxX(); // MaxX
             y = linearEquationGetY(x, perpendicularSlope, c);
         } else if(diffX > 0 && diffY > 0) {
+            System.out.println("NO");
             x = boundingBox.getMinX();
             y = linearEquationGetY(x, perpendicularSlope, c);
         } else if(0 > diffX && 0 > diffY) {
+            System.out.println("SW");
             x = boundingBox.getMaxX();
             y = linearEquationGetY(x, perpendicularSlope, c);
         } else if(diffX > 0 && 0 > diffY) {
+            System.out.println("SO");
             x = boundingBox.getMaxX();
             y = linearEquationGetY(x, perpendicularSlope, c);
         } else if(0 > diffX && diffY > 0) {
+            System.out.println("NW");
             x = boundingBox.getMinX();
             y = linearEquationGetY(x, perpendicularSlope, c);
         }
@@ -298,10 +303,6 @@ public class FontOutlineRetriever extends JFrame {
         return new Point2D.Double(intersectX, intersectY);
     }
 
-    public static double linearEquationGetX(double y, double slope, double c) {
-        if(slope == 0) return 0.0;
-        else return (y - c) / slope;
-    }
     public static double linearEquationGetY(double x, double slope, double c) {
         return slope * x + c;
     }
