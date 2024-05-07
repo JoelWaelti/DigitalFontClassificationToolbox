@@ -68,6 +68,14 @@ public class JavaAwtFontParser implements FontParser {
             pathIterator.next();
         }
 
-        return new Glyph(character, fontSize, contours);
+        Rectangle bounds = glyphOutline.getBounds();
+        BoundingBox boundingBox = new BoundingBox(
+                bounds.getMinX(),
+                bounds.getMaxX(),
+                bounds.getMinY(),
+                bounds.getMaxY()
+        );
+
+        return new Glyph(character, fontSize, contours, boundingBox);
     }
 }
