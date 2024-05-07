@@ -98,6 +98,9 @@ public class FontOutlineRetriever extends JFrame {
 
         ArrayList<Double> allDistances = new ArrayList<>();
 
+        // go through all points of flattened outline
+        // then create lines from points
+        // then calculate nearest intersection/distance of perp. line
         for(int i = 1; i < all_points.size(); i++) {
             Point2D start = all_points.get(i-1);
             Point2D end = all_points.get(i);
@@ -178,11 +181,13 @@ public class FontOutlineRetriever extends JFrame {
     }
 
     public static double distanceNearestIntersection(Line2D currentLine, List<Point2D> allPoints, Rectangle2D boundingBox) {
-        double currentSlope = 0;
+        // Calculate slope (Steigung)
+        double currentSlope = 0; //TODO infinity überlegung
         if(currentLine.getX2() - currentLine.getX1() != 0) currentSlope = (currentLine.getY2() - currentLine.getY1())/(currentLine.getX2() - currentLine.getX1());
 
-
+        // Calculate point at the middle of the line
         Point2D centerPoint = new Point2D.Double((currentLine.getX1() + currentLine.getX2()) / 2, (currentLine.getY1() + currentLine.getY2()) / 2);
+
         Line2D perpendicularLine = getPerpendicularLine(currentLine, currentSlope, centerPoint, boundingBox);
         System.out.println(perpendicularLine.getX1() + ", " + perpendicularLine.getY1());
         System.out.println(perpendicularLine.getX2() + ", " +  perpendicularLine.getY2());
@@ -190,6 +195,7 @@ public class FontOutlineRetriever extends JFrame {
 
         ArrayList<Point2D> intersections = new ArrayList<>();
 
+        // find all intersections of perp. line with any other segment
         for(int i = 1; i < allPoints.size(); i++) {
             Point2D start = allPoints.get(i-1);
             Point2D end = allPoints.get(i);
@@ -202,6 +208,7 @@ public class FontOutlineRetriever extends JFrame {
             }
         }
 
+        // find nearst intersection
         double distanceNearestIntersectionPoint = Double.MAX_VALUE;
         double tolerance = 1e-10; // Define a small tolerance value, adjust as necessary
 
@@ -212,6 +219,7 @@ public class FontOutlineRetriever extends JFrame {
             }
         }
 
+        // no intersection found
         if (distanceNearestIntersectionPoint == Double.MAX_VALUE) {
             distanceNearestIntersectionPoint = 0;
         }
@@ -223,12 +231,15 @@ public class FontOutlineRetriever extends JFrame {
     }
 
     public static Line2D getPerpendicularLine(Line2D line, double lineSlope, Point2D centerPoint, Rectangle2D boundingBox) {
-        double x = centerPoint.getX();
-        double y = centerPoint.getY();
+        double endpointPerpendicularLineX = centerPoint.getX();
+        double endpointPerpendicularLineY = centerPoint.getY();
 
-        double perpendicularSlope = 0;
+        // calculate slope of perp. line
+        double perpendicularSlope = 0; // TODO infinity überlegung
         if(lineSlope != 0) perpendicularSlope = (-1) / lineSlope;
-        double c = centerPoint.getY() - perpendicularSlope * centerPoint.getX();
+
+        // calculate y-axis-intersection --> y = mx + b
+        double b = centerPoint.getY() - perpendicularSlope * centerPoint.getX();
 
         double diffX = line.getX2() - line.getX1();
         double diffY = line.getY2() - line.getY1();
@@ -240,39 +251,39 @@ public class FontOutlineRetriever extends JFrame {
 
         if(horizontalMoveRight) {
             System.out.println("horizontalMoveRight");
-            y = boundingBox.getMinY() * -1; // MaxY
-            x = centerPoint.getX();
+            endpointPerpendicularLineX = centerPoint.getX();
+            endpointPerpendicularLineY = boundingBox.getMinY() * -1; // MaxY
         } else if(horizontalMoveLeft) {
             System.out.println("horizontalMoveLeft");
-            y = boundingBox.getMaxY() * -1; // MinY
-            x = centerPoint.getX();
+            endpointPerpendicularLineY = boundingBox.getMaxY() * -1; // MinY
+            endpointPerpendicularLineX = centerPoint.getX();
         } else if(verticalMoveUp) {
             System.out.println("verticalMoveUp");
-            x = boundingBox.getMinX(); // MinX
-            y = linearEquationGetY(x, perpendicularSlope, c);
+            endpointPerpendicularLineX = boundingBox.getMinX(); // MinX
+            endpointPerpendicularLineY = centerPoint.getY();
         } else if(verticalMoveDown ) {
             System.out.println("verticalMoveDown");
-            x = boundingBox.getMaxX(); // MaxX
-            y = linearEquationGetY(x, perpendicularSlope, c);
+            endpointPerpendicularLineX = boundingBox.getMaxX(); // MaxX
+            endpointPerpendicularLineY = centerPoint.getY();
         } else if(diffX > 0 && diffY > 0) {
             System.out.println("NO");
-            x = boundingBox.getMinX();
-            y = linearEquationGetY(x, perpendicularSlope, c);
+            endpointPerpendicularLineX = boundingBox.getMinX();
+            endpointPerpendicularLineY = linearEquationGetY(endpointPerpendicularLineX, perpendicularSlope, b);
         } else if(0 > diffX && 0 > diffY) {
             System.out.println("SW");
-            x = boundingBox.getMaxX();
-            y = linearEquationGetY(x, perpendicularSlope, c);
+            endpointPerpendicularLineX = boundingBox.getMaxX();
+            endpointPerpendicularLineY = linearEquationGetY(endpointPerpendicularLineX, perpendicularSlope, b);
         } else if(diffX > 0 && 0 > diffY) {
             System.out.println("SO");
-            x = boundingBox.getMaxX();
-            y = linearEquationGetY(x, perpendicularSlope, c);
+            endpointPerpendicularLineX = boundingBox.getMaxX();
+            endpointPerpendicularLineY = linearEquationGetY(endpointPerpendicularLineX, perpendicularSlope, b);
         } else if(0 > diffX && diffY > 0) {
             System.out.println("NW");
-            x = boundingBox.getMinX();
-            y = linearEquationGetY(x, perpendicularSlope, c);
+            endpointPerpendicularLineX = boundingBox.getMinX();
+            endpointPerpendicularLineY = linearEquationGetY(endpointPerpendicularLineX, perpendicularSlope, b);
         }
 
-        Point2D endPoint = new Point2D.Double(x, y);
+        Point2D endPoint = new Point2D.Double(endpointPerpendicularLineX, endpointPerpendicularLineY);
         return new Line2D.Double(centerPoint, endPoint);
     }
 
