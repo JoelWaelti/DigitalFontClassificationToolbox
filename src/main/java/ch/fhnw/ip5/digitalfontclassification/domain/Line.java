@@ -5,6 +5,8 @@ import java.awt.geom.Point2D;
 
 public class Line extends Segment {
 
+    private double length = -1;
+
     public Line(Point from, Point to) {
         super(from, to);
     }
@@ -33,5 +35,13 @@ public class Line extends Segment {
         Point to = new Point(rotatedVectorX * length + from.getX(), rotatedVectorY * length + from.getY());
 
         return new Line(from, to);
+    }
+
+    public double getLength() {
+        if (length < 0) {
+            length = this.getFrom().distanceTo(this.getTo());
+        }
+
+        return length;
     }
 }
