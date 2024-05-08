@@ -37,15 +37,14 @@ public class ThicknessAlongPathPlot {
                 Glyph flattenedGlyph = flattener.flatten(glyph);
                 List<Double> thicknesses = getShiftedThicknesses(flattenedGlyph);
 
-                JFreeChart chart = getChart(thicknesses, parser.getFontName(), character);
                 Path relativePath = Path.of(originPath).relativize(fontPath);
                 Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
                 File plotFile = plotFilePath.toFile();
-
                 if (!Files.exists(plotFilePath.getParent())) {
                     Files.createDirectories(plotFilePath.getParent());
                 }
 
+                JFreeChart chart = getChart(thicknesses, parser.getFontName(), character);
                 ChartUtilities.saveChartAsJPEG(plotFile, chart, 600, 800);
             } catch (Exception ignored) {}
         });

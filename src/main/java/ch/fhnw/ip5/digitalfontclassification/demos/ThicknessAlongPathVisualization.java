@@ -26,6 +26,8 @@ public class ThicknessAlongPathVisualization {
 
         PlotUtil.doForEachFontInDirectory(sourcePath, fontPath -> {
             try {
+                System.out.println(fontPath);
+
                 FontParser parser = new JavaAwtFontParser(fontPath.toString());
                 Glyph glyph = parser.getGlyph(character, fontSize);
                 Flattener flattener = new JavaAwtFlattener(flatness);
@@ -33,9 +35,14 @@ public class ThicknessAlongPathVisualization {
 
                 BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph);
 
-                Files.createDirectories(Path.of(targetPath));
-                String filePath = Path.of(targetPath, parser.getFontName() + ".png").toString();
-                ImageIO.write(bufferedImage, "PNG", new File(filePath));
+                Path relativePath = Path.of(sourcePath).relativize(fontPath);
+                Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
+                File plotFile = plotFilePath.toFile();
+                if (!Files.exists(plotFilePath.getParent())) {
+                    Files.createDirectories(plotFilePath.getParent());
+                }
+
+                ImageIO.write(bufferedImage, "PNG", plotFile);
             } catch(Exception ignored) {}
         });
     }
