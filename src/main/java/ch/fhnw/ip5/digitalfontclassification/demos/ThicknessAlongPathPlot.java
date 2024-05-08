@@ -49,10 +49,8 @@ public class ThicknessAlongPathPlot {
                 if (!targetDirectory.exists()){
                     targetDirectory.mkdirs();
                 } else {
-                    System.out.println("Could not create dir + " + fontClass.getName());
+                    System.out.println("Did not create dir: " + fontClass.getName());
                 }
-
-                plotThickness(fontClass, targetDirectory);
             }
         }
     }
@@ -67,7 +65,7 @@ public class ThicknessAlongPathPlot {
                     Glyph flattenedGlyph = getFlattendGlyph(fileEntry.getPath(), character, fontSize, flatness);
                     List<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(flattenedGlyph);
 
-                    File graphFile = new File(targetFolder.getPath() + "/" + fontName + ".jpeg" );
+                    File graphFile = new File(targetFolder.getPath() + "/" + fontClass.getName() + "/" + fontName + ".jpeg" );
                     barPlotThickness(graphFile, fontName, thicknesses);
                 }
             }
@@ -89,7 +87,7 @@ public class ThicknessAlongPathPlot {
         }
 
         JFreeChart barChartObject = ChartFactory.createBarChart(
-            fontName,
+            fontName +": " + character,
             "Segment Nr.",
             "Thickness",
             dataset,
