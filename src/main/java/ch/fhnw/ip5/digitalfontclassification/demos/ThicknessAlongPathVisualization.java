@@ -31,7 +31,6 @@ public class ThicknessAlongPathVisualization extends JPanel {
     }
 
     private void drawGlyph(Glyph glyph) {
-        System.out.println("GLYPH");
         List<Contour> contours = glyph.getContours();
         for (Contour contour : contours) {
             java.util.List<Point> outlinePoints = contour.getOutlinePoints();
@@ -49,7 +48,6 @@ public class ThicknessAlongPathVisualization extends JPanel {
 
     private void drawThicknessLines(Glyph glyph) {
         List<Line> lines = LineThicknessAnalyzer.computeThicknessLinesAlongPathAtMiddleOfSegments(glyph);
-        System.out.println("HELLO");
         g2d.setColor(Color.RED);
         for(Line line : lines) {
             Point from = line.getFrom();
