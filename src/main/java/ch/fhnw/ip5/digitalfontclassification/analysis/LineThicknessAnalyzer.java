@@ -4,10 +4,16 @@ import ch.fhnw.ip5.digitalfontclassification.domain.*;
 
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import java.util.List;
 
 public class LineThicknessAnalyzer {
-    public static ArrayList<Double> computeThicknessAlongPathAtMiddleOfSegments(Glyph glyph) {
-        ArrayList<Double> thicknesses = new ArrayList<>();
+    public static List<Double> computeThicknessAlongPathAtMiddleOfSegments(Glyph glyph) {
+        return computeThicknessLinesAlongPathAtMiddleOfSegments(glyph).stream()
+                .map(Line::getLength).toList();
+    }
+
+    public static List<Line> computeThicknessLinesAlongPathAtMiddleOfSegments(Glyph glyph) {
+        ArrayList<Line> thicknessLines = new ArrayList<>();
 
         // It's assumed that this first contour is the main enclosing contour of the glyph
         Contour contour = glyph.getContours().getFirst();
@@ -17,15 +23,16 @@ public class LineThicknessAnalyzer {
                 throw new IllegalArgumentException("Contours of the glyph can only contain lines for this operation. Consider flattening the entire glyph.");
             }
 
-            double thickness = thicknessAtMiddleOfSegment(line, glyph);
-            //System.out.println();
-            thicknesses.add(thickness);
+            Line thicknessLine = thicknessLineAtMiddleOfSegment(line, glyph);
+            if(thicknessLine != null) {
+                thicknessLines.add(thicknessLine);
+            }
         }
 
-        return thicknesses;
+        return thicknessLines;
     }
 
-    private static double thicknessAtMiddleOfSegment(Line line, Glyph glyph) {
+    private static Line thicknessLineAtMiddleOfSegment(Line line, Glyph glyph) {
         // Calculate point at the middle of the line
         double centerX = (line.getFrom().getX() + line.getTo().getX()) / 2;
         double centerY = (line.getFrom().getY() + line.getTo().getY()) / 2;
@@ -38,6 +45,7 @@ public class LineThicknessAnalyzer {
 
         // find nearest intersection of perpendicular line with any other segment of the glyph
         double distanceToNearestIntersection = Double.MAX_VALUE;
+        Point nearestIntersection = null;
         for(Contour contour : glyph.getContours()) {
             for(Segment s : contour.getSegments()) {
                 if(s == line) {
@@ -50,21 +58,20 @@ public class LineThicknessAnalyzer {
 
                 Point intersection = getLineLineIntersection(perpendicularLine, (Line) s);
                 if(intersection != null) {
-                    //System.out.println("intersection: " + intersection);
                     double dist = intersection.distanceTo(center);
                     if(dist < distanceToNearestIntersection) {
                         distanceToNearestIntersection = dist;
+                        nearestIntersection = intersection;
                     }
                 }
             }
         }
 
-        if(distanceToNearestIntersection == Double.MAX_VALUE) {
-            distanceToNearestIntersection = -1;
+        if(nearestIntersection == null) {
+            return null;
         }
 
-        //System.out.println(distanceToNearestIntersection);
-        return distanceToNearestIntersection;
+        return new Line(center, nearestIntersection);
     }
 
     private static Point getLineLineIntersection(Line line1, Line line2) {
