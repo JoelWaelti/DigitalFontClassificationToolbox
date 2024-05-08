@@ -3,38 +3,63 @@ package ch.fhnw.ip5.digitalfontclassification.demos;
 import ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import ch.fhnw.ip5.digitalfontclassification.domain.Point;
+import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 
-import javax.swing.*;
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
-import static ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer.computeThicknessAlongPathAtMiddleOfSegments;
+public class ThicknessAlongPathVisualization {
 
-public class ThicknessAlongPathVisualization extends JPanel {
-    private Glyph glyph;
-    private Graphics2D g2d;
+    // Args: <source path> <target path> <character> <font size> <flatness>
+    public static void main(String[] args) throws IOException {
+        String sourcePath = args[0];
+        String targetPath = args[1];
+        char character = args[2].charAt(0);
+        float fontSize = Float.parseFloat(args[3]);
+        double flatness = Double.parseDouble(args[4]);
 
-    public ThicknessAlongPathVisualization(Glyph glyph) {
-        this.glyph = glyph;
+        PlotUtil.doForEachFontInDirectory(sourcePath, fontPath -> {
+            try {
+                FontParser parser = new JavaAwtFontParser(fontPath.toString());
+                Glyph glyph = parser.getGlyph(character, fontSize);
+                Flattener flattener = new JavaAwtFlattener(flatness);
+                Glyph flattenedGlyph = flattener.flatten(glyph);
+
+                BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph);
+
+                Files.createDirectories(Path.of(targetPath));
+                String filePath = Path.of(targetPath, parser.getFontName() + ".png").toString();
+                ImageIO.write(bufferedImage, "PNG", new File(filePath));
+            } catch(Exception ignored) {}
+        });
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        g2d = (Graphics2D) g;
+    private static BufferedImage getVisualizationAsBufferedImage(Glyph glyph) {
+        BufferedImage bi = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = bi.createGraphics();
+
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(0,0,bi.getWidth(),bi.getHeight());
+
         g2d.scale(1, -1);
-        g2d.translate(0, -getHeight());
 
-        drawGlyph(glyph);
-        drawThicknessLines(glyph);
+        int tolerance = 100;
+        g2d.translate(0, -bi.getHeight() + tolerance);
+
+        drawGlyph(glyph, g2d);
+        drawThicknessLines(glyph, g2d);
+        return bi;
     }
 
-    private void drawGlyph(Glyph glyph) {
+    private static void drawGlyph(Glyph glyph, Graphics2D g2d) {
         List<Contour> contours = glyph.getContours();
         for (Contour contour : contours) {
-            java.util.List<Point> outlinePoints = contour.getOutlinePoints();
-
             // Draw segments connecting outline points
             g2d.setColor(Color.BLACK);
             List<Segment> segments = contour.getSegments();
@@ -46,7 +71,7 @@ public class ThicknessAlongPathVisualization extends JPanel {
         }
     }
 
-    private void drawThicknessLines(Glyph glyph) {
+    private static void drawThicknessLines(Glyph glyph, Graphics2D g2d) {
         List<Line> lines = LineThicknessAnalyzer.computeThicknessLinesAlongPathAtMiddleOfSegments(glyph);
         g2d.setColor(Color.RED);
         for(Line line : lines) {
@@ -54,22 +79,5 @@ public class ThicknessAlongPathVisualization extends JPanel {
             Point to = line.getTo();
             g2d.drawLine((int) from.getX(), (int) from.getY(), (int) to.getX(), (int) to.getY());
         }
-    }
-
-    public static void main(String[] args) throws IOException, FontFormatException {
-        String fontPath = args[0];
-        char character = args[1].charAt(0);
-        float fontSize = Float.parseFloat(args[2]);
-        double flatness = Double.parseDouble(args[3]);
-        FontParser parser = new JavaAwtFontParser(fontPath);
-        Glyph glyph = parser.getGlyph(character, fontSize);
-        Flattener flattener = new JavaAwtFlattener(flatness);
-        Glyph flattenedGlyph = flattener.flatten(glyph);
-
-        JFrame frame = new JFrame();
-        frame.setSize(400, 400);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().add(new ThicknessAlongPathVisualization(flattenedGlyph));
-        frame.setVisible(true);
     }
 }

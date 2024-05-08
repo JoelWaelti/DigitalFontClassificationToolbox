@@ -1,112 +1,89 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
+import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-import java.awt.FontFormatException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import static ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer.computeThicknessAlongPathAtMiddleOfSegments;
 
 public class ThicknessAlongPathPlot {
-    private static char character;
-    private static float fontSize;
-    private static double flatness;
 
     // Args: <source> <target> <character> <fontSize> <flatness>
-    public static void main(String[] args) throws IOException, FontFormatException {
+    public static void main(String[] args) throws IOException {
         String originPath = args[0];
-        File fontDirectory = new File(originPath);
-
         String targetPath = args[1];
-        File targetDirectory = new File(targetPath);
+        char character = args[2].charAt(0);
+        float fontSize = Float.parseFloat(args[3]);
+        double flatness = Double.parseDouble(args[4]);
 
-        character = args[2].charAt(0);
-        fontSize = Float.parseFloat(args[3]);
-        flatness = Double.parseDouble(args[4]);
+        PlotUtil.doForEachFontInDirectory(originPath, fontPath -> {
+            try {
+                System.out.println(fontPath);
 
-        createDirectoriesForGraph(fontDirectory, targetDirectory);
-        plotThickness(fontDirectory, targetDirectory);
+                FontParser parser = new JavaAwtFontParser(fontPath.toString());
+                Glyph glyph = parser.getGlyph(character, fontSize);
+                Flattener flattener = new JavaAwtFlattener(flatness);
+                Glyph flattenedGlyph = flattener.flatten(glyph);
+                List<Double> thicknesses = getShiftedThicknesses(flattenedGlyph);
+
+                JFreeChart chart = getChart(thicknesses, parser.getFontName(), character);
+                Path relativePath = Path.of(originPath).relativize(fontPath);
+                Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
+                File plotFile = plotFilePath.toFile();
+
+                if (!Files.exists(plotFilePath.getParent())) {
+                    Files.createDirectories(plotFilePath.getParent());
+                }
+
+                ChartUtilities.saveChartAsJPEG(plotFile, chart, 600, 800);
+            } catch (Exception ignored) {}
+        });
     }
 
-    public static void createDirectoriesForGraph(final File fontFolder, final File targetFolder)
-        throws IOException, FontFormatException {
-        File targetDirectory = null;
-        for (final File fontClass : fontFolder.listFiles()) {
-            if (fontClass.isDirectory()) {
-                targetDirectory = new File(targetFolder.getPath() + "/" + fontClass.getName());
-                if (!targetDirectory.exists()){
-                    targetDirectory.mkdirs();
-                } else {
-                    System.out.println("Did not create dir: " + fontClass.getName());
-                }
+    public static List<Double> getShiftedThicknesses(Glyph glyph) {
+        List<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(glyph);
+
+        // shift thicknesses
+        Point origin = new Point(0,0);
+        List<Segment> segments = glyph.getContours().getFirst().getSegments();
+        int minSegmentIndex = 0;
+        double minDistance = Double.MAX_VALUE;
+        for(int i = 0; i < segments.size(); i++) {
+            double d = segments.get(i).getFrom().distanceTo(origin);
+            if(d < minDistance) {
+                minSegmentIndex = i;
+                minDistance = d;
             }
         }
-    }
 
-    public static void plotThickness(final File fontFolder, File targetFolder) throws IOException, FontFormatException {
-        for (final File fontClass : fontFolder.listFiles()) {
-            if (fontClass.isDirectory()) {
-                for (final File fileEntry : fontClass.listFiles()) {
-                    try {
-                        int dotIndex = fileEntry.getName().lastIndexOf(".");
-                        String fontName = fileEntry.getName().substring(0, dotIndex);
-
-                        Glyph flattenedGlyph = getFlattendGlyph(fileEntry.getPath(), character, fontSize, flatness);
-
-                        List<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(flattenedGlyph);
-
-                        // shift thicknesses
-                        Point origin = new Point(0,0);
-                        List<Segment> segments = flattenedGlyph.getContours().getFirst().getSegments();
-                        int minSegmentIndex = 0;
-                        double minDistance = Double.MAX_VALUE;
-                        for(int i = 1; i < segments.size(); i++) {
-                            double d = segments.get(i).getFrom().distanceTo(origin);
-                            if(d < minDistance) {
-                                minSegmentIndex = i;
-                                minDistance = d;
-                            }
-                        }
-
-                        List<Double> shiftedThicknesses = new ArrayList<>();
-                        for(int i = 0; i < thicknesses.size(); i++) {
-                            int shiftedIndex = (i + minSegmentIndex) % thicknesses.size();
-                            shiftedThicknesses.add(thicknesses.get(shiftedIndex));
-                        }
-
-                        File graphFile = new File(targetFolder.getPath() + "/" + fontClass.getName() + "/" + fontName + ".jpeg" );
-                        barPlotThickness(graphFile, fontName, shiftedThicknesses);
-                    } catch (Exception ignored) { }
-                }
-            }
+        List<Double> shiftedThicknesses = new ArrayList<>();
+        for(int i = 0; i < thicknesses.size(); i++) {
+            int shiftedIndex = (i + minSegmentIndex) % thicknesses.size();
+            shiftedThicknesses.add(thicknesses.get(shiftedIndex));
         }
+
+        return shiftedThicknesses;
     }
 
-    public static Glyph getFlattendGlyph(String fontPath, char character, float fontSize, double flatness) throws IOException, FontFormatException {
-        FontParser parser = new JavaAwtFontParser(fontPath);
-        Glyph glyph = parser.getGlyph(character, fontSize);
-        Flattener flattener = new JavaAwtFlattener(flatness);
-
-
-        return flattener.flatten(glyph);
-    }
-
-    public static void barPlotThickness(File barChart, String fontName, List<Double> var) throws IOException {
+    public static JFreeChart getChart(List<Double> thicknesses, String fontName, char character) {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
-        for(int i = 0; i < var.size(); i++) {
-            dataset.addValue(var.get(i), "thicknesses", String.valueOf(i));
+        for(int i = 0; i < thicknesses.size(); i++) {
+            dataset.addValue(thicknesses.get(i), "thicknesses", String.valueOf(i));
         }
 
-        JFreeChart barChartObject = ChartFactory.createBarChart(
+        return ChartFactory.createBarChart(
             fontName +": " + character,
             "Segment Nr.",
             "Thickness",
@@ -116,15 +93,5 @@ public class ThicknessAlongPathPlot {
             true,
             false
         );
-
-        int width = 640;    /* Width of the image */
-        int height = 480;   /* Height of the image */
-
-        try {
-            ChartUtilities.saveChartAsJPEG(barChart, barChartObject , width , height);
-        } catch (IOException e) {
-            System.out.println("Error occurred while saving the chart for " + fontName);
-            e.printStackTrace();
-        }
     }
 }
