@@ -1,10 +1,5 @@
 package ch.fhnw.ip5.digitalfontclassification.domain;
 
-import ch.fhnw.ip5.digitalfontclassification.domain.Contour;
-import ch.fhnw.ip5.digitalfontclassification.domain.FontParser;
-import ch.fhnw.ip5.digitalfontclassification.domain.Glyph;
-import ch.fhnw.ip5.digitalfontclassification.domain.Point;
-
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
@@ -41,7 +36,6 @@ public class JavaAwtFontParser implements FontParser {
         PathIterator pathIterator = glyphOutline.getPathIterator(new AffineTransform());
         double[] coords = new double[6];
 
-        ch.fhnw.ip5.digitalfontclassification.domain.Point prev = null;
         while (!pathIterator.isDone()) {
             int type = pathIterator.currentSegment(coords);
 
