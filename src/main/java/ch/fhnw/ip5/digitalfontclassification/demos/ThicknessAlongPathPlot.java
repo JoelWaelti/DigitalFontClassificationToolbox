@@ -1,10 +1,6 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
-import ch.fhnw.ip5.digitalfontclassification.domain.Flattener;
-import ch.fhnw.ip5.digitalfontclassification.domain.FontParser;
-import ch.fhnw.ip5.digitalfontclassification.domain.Glyph;
-import ch.fhnw.ip5.digitalfontclassification.domain.JavaAwtFlattener;
-import ch.fhnw.ip5.digitalfontclassification.domain.JavaAwtFontParser;
+import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.ChartUtilities;
@@ -24,7 +20,7 @@ public class ThicknessAlongPathPlot {
     private static float fontSize;
     private static double flatness;
 
-    // Args: <origin> <target> <character> <fontSize> <flatness>
+    // Args: <source> <target> <character> <fontSize> <flatness>
     public static void main(String[] args) throws IOException, FontFormatException {
         String originPath = args[0];
         File fontDirectory = new File(originPath);
@@ -59,14 +55,36 @@ public class ThicknessAlongPathPlot {
         for (final File fontClass : fontFolder.listFiles()) {
             if (fontClass.isDirectory()) {
                 for (final File fileEntry : fontClass.listFiles()) {
-                    int dotIndex = fileEntry.getName().lastIndexOf(".");
-                    String fontName = fileEntry.getName().substring(0, dotIndex);
+                    try {
+                        int dotIndex = fileEntry.getName().lastIndexOf(".");
+                        String fontName = fileEntry.getName().substring(0, dotIndex);
 
-                    Glyph flattenedGlyph = getFlattendGlyph(fileEntry.getPath(), character, fontSize, flatness);
-                    List<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(flattenedGlyph);
+                        Glyph flattenedGlyph = getFlattendGlyph(fileEntry.getPath(), character, fontSize, flatness);
 
-                    File graphFile = new File(targetFolder.getPath() + "/" + fontClass.getName() + "/" + fontName + ".jpeg" );
-                    barPlotThickness(graphFile, fontName, thicknesses);
+                        List<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(flattenedGlyph);
+
+                        // shift thicknesses
+                        Point origin = new Point(0,0);
+                        List<Segment> segments = flattenedGlyph.getContours().getFirst().getSegments();
+                        int minSegmentIndex = 0;
+                        double minDistance = Double.MAX_VALUE;
+                        for(int i = 1; i < segments.size(); i++) {
+                            double d = segments.get(i).getFrom().distanceTo(origin);
+                            if(d < minDistance) {
+                                minSegmentIndex = i;
+                                minDistance = d;
+                            }
+                        }
+
+                        List<Double> shiftedThicknesses = new ArrayList<>();
+                        for(int i = 0; i < thicknesses.size(); i++) {
+                            int shiftedIndex = (i + minSegmentIndex) % thicknesses.size();
+                            shiftedThicknesses.add(thicknesses.get(shiftedIndex));
+                        }
+
+                        File graphFile = new File(targetFolder.getPath() + "/" + fontClass.getName() + "/" + fontName + ".jpeg" );
+                        barPlotThickness(graphFile, fontName, shiftedThicknesses);
+                    } catch (Exception ignored) { }
                 }
             }
         }
@@ -77,11 +95,13 @@ public class ThicknessAlongPathPlot {
         Glyph glyph = parser.getGlyph(character, fontSize);
         Flattener flattener = new JavaAwtFlattener(flatness);
 
+
         return flattener.flatten(glyph);
     }
 
     public static void barPlotThickness(File barChart, String fontName, List<Double> var) throws IOException {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
         for(int i = 0; i < var.size(); i++) {
             dataset.addValue(var.get(i), "thicknesses", String.valueOf(i));
         }
