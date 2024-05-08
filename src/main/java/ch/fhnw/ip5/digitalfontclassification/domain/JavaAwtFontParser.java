@@ -40,17 +40,17 @@ public class JavaAwtFontParser implements FontParser {
             int type = pathIterator.currentSegment(coords);
 
             if (type == PathIterator.SEG_MOVETO) {
-                ch.fhnw.ip5.digitalfontclassification.domain.Point to = new ch.fhnw.ip5.digitalfontclassification.domain.Point(coords[0], -coords[1]);
+                Point to = new Point(coords[0], -coords[1]);
                 contours.add(new Contour(to));
             } else if (type == PathIterator.SEG_LINETO) {
-                ch.fhnw.ip5.digitalfontclassification.domain.Point to = new ch.fhnw.ip5.digitalfontclassification.domain.Point(coords[0], -coords[1]);
+                Point to = new Point(coords[0], -coords[1]);
                 contours.getLast().lineTo(to);
             } else if (type == PathIterator.SEG_CUBICTO) {
                 // The final coords in a CUBICTO are the actual new outline point.
                 // The first two pairs are control points.
-                ch.fhnw.ip5.digitalfontclassification.domain.Point control1 = new ch.fhnw.ip5.digitalfontclassification.domain.Point(coords[0], -coords[1]);
-                ch.fhnw.ip5.digitalfontclassification.domain.Point control2 = new ch.fhnw.ip5.digitalfontclassification.domain.Point(coords[2], -coords[3]);
-                ch.fhnw.ip5.digitalfontclassification.domain.Point to = new Point(coords[4], -coords[5]);
+                Point control1 = new Point(coords[0], -coords[1]);
+                Point control2 = new Point(coords[2], -coords[3]);
+                Point to = new Point(coords[4], -coords[5]);
                 contours.getLast().cubicTo(control1, control2, to);
             } else if (type == PathIterator.SEG_CLOSE) {
                 // close path --> add line from last to first point
