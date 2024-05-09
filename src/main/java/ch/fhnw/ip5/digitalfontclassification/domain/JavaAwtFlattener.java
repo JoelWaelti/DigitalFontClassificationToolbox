@@ -1,7 +1,5 @@
 package ch.fhnw.ip5.digitalfontclassification.domain;
 
-import ch.fhnw.ip5.digitalfontclassification.domain.*;
-
 import java.awt.geom.CubicCurve2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
@@ -26,7 +24,7 @@ public class JavaAwtFlattener implements Flattener {
 
     @Override
     public Contour flatten(Contour contour) {
-        Contour flattenedContour = new Contour(contour.getSegments().getFirst().getFrom());
+        Contour.Builder builder = Contour.builder().startAt(contour.getSegments().getFirst().getFrom());
         for (Segment s : contour.getSegments()) {
             if (s instanceof CubicBezierCurve) {
                 ArrayList<Line> lines = new ArrayList<>();
@@ -39,24 +37,24 @@ public class JavaAwtFlattener implements Flattener {
                     int type = iterator.currentSegment(coords);
                     if (type == PathIterator.SEG_LINETO) {
                         Point to = new Point(coords[0], coords[1]);
-                        flattenedContour.lineTo(to);
+                        builder.lineTo(to);
                     }
                     iterator.next();
                 }
             } else if (s instanceof Line) {
-                flattenedContour.lineTo(s.getTo());
+                builder.lineTo(s.getTo());
             }
         }
-        return flattenedContour;
+        return builder.build();
     }
 
 
     private CubicCurve2D.Double convertCurve(CubicBezierCurve c) {
         return new CubicCurve2D.Double(
-                c.getFrom().getX(), c.getFrom().getY(),
-                c.getControl1().getX(), c.getControl1().getY(),
-                c.getControl2().getX(), c.getControl2().getY(),
-                c.getTo().getX(), c.getTo().getY()
+                c.getFrom().x(), c.getFrom().y(),
+                c.getControl1().x(), c.getControl1().y(),
+                c.getControl2().x(), c.getControl2().y(),
+                c.getTo().x(), c.getTo().y()
         );
     }
 }

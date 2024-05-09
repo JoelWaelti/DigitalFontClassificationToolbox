@@ -6,7 +6,6 @@ import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer.computeThicknessAlongPathAtMiddleOfSegments;
@@ -35,7 +34,7 @@ public class FlattenedGlyphView extends JPanel {
             for (Segment segment : segments) {
                 ch.fhnw.ip5.digitalfontclassification.domain.Point from = segment.getFrom();
                 Point to = segment.getTo();
-                g2d.drawLine((int) from.getX(), (int) from.getY(), (int) to.getX(), (int) to.getY());
+                g2d.drawLine((int) from.x(), (int) from.y(), (int) to.x(), (int) to.y());
             }
         }
     }

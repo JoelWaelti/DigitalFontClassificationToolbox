@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer.computeThicknessAlongPathAtMiddleOfSegments;
@@ -35,7 +35,7 @@ public class ThicknessAlongPathPlot {
                 Glyph glyph = parser.getGlyph(character, fontSize);
                 Flattener flattener = new JavaAwtFlattener(flatness);
                 Glyph flattenedGlyph = flattener.flatten(glyph);
-                List<Double> thicknesses = getShiftedThicknesses(flattenedGlyph);
+                List<Double> thicknesses = getThicknesses(flattenedGlyph);
 
                 Path relativePath = Path.of(originPath).relativize(fontPath);
                 Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
@@ -46,33 +46,26 @@ public class ThicknessAlongPathPlot {
 
                 JFreeChart chart = getChart(thicknesses, parser.getFontName(), character);
                 ChartUtilities.saveChartAsJPEG(plotFile, chart, 600, 800);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
     }
 
-    public static List<Double> getShiftedThicknesses(Glyph glyph) {
+    public static List<Double> getThicknesses(Glyph glyph) {
         List<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(glyph);
 
-        // shift thicknesses
+        // shift thicknesses to start with the segment closest to point (0,0)
         Point origin = new Point(0,0);
         List<Segment> segments = glyph.getContours().getFirst().getSegments();
-        int minSegmentIndex = 0;
-        double minDistance = Double.MAX_VALUE;
-        for(int i = 0; i < segments.size(); i++) {
-            double d = segments.get(i).getFrom().distanceTo(origin);
-            if(d < minDistance) {
-                minSegmentIndex = i;
-                minDistance = d;
-            }
-        }
+        Segment closestSegment = Collections.min(
+                segments,
+                (s1, s2) -> (int) (s1.getFrom().distanceTo(origin) - s2.getFrom().distanceTo(origin))
+        );
+        int closestSegmentIndex = segments.indexOf(closestSegment);
+        Collections.rotate(thicknesses, closestSegmentIndex);
 
-        List<Double> shiftedThicknesses = new ArrayList<>();
-        for(int i = 0; i < thicknesses.size(); i++) {
-            int shiftedIndex = (i + minSegmentIndex) % thicknesses.size();
-            shiftedThicknesses.add(thicknesses.get(shiftedIndex));
-        }
-
-        return shiftedThicknesses;
+        return thicknesses;
     }
 
     public static JFreeChart getChart(List<Double> thicknesses, String fontName, char character) {

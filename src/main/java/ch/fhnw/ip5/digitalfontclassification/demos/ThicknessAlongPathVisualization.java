@@ -73,7 +73,7 @@ public class ThicknessAlongPathVisualization {
             for (Segment segment : segments) {
                 Point from = segment.getFrom();
                 Point to = segment.getTo();
-                g2d.drawLine((int) from.getX(), (int) from.getY(), (int) to.getX(), (int) to.getY());
+                g2d.drawLine((int) from.x(), (int) from.y(), (int) to.x(), (int) to.y());
             }
         }
     }
@@ -84,7 +84,7 @@ public class ThicknessAlongPathVisualization {
         for(Line line : lines) {
             Point from = line.getFrom();
             Point to = line.getTo();
-            g2d.drawLine((int) from.getX(), (int) from.getY(), (int) to.getX(), (int) to.getY());
+            g2d.drawLine((int) from.x(), (int) from.y(), (int) to.x(), (int) to.y());
         }
     }
 }

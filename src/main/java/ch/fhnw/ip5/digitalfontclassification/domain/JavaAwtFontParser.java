@@ -31,35 +31,12 @@ public class JavaAwtFontParser implements FontParser {
         GlyphVector glyphVector = font.createGlyphVector(frc, new char[]{character});
         Shape glyphOutline = glyphVector.getGlyphOutline(0);
 
-        List<Contour> contours = new ArrayList<>();
-
+        List<Contour> contours;
         PathIterator pathIterator = glyphOutline.getPathIterator(new AffineTransform());
-        double[] coords = new double[6];
-
-        while (!pathIterator.isDone()) {
-            int type = pathIterator.currentSegment(coords);
-
-            if (type == PathIterator.SEG_MOVETO) {
-                Point to = new Point(coords[0], -coords[1]);
-                contours.add(new Contour(to));
-            } else if (type == PathIterator.SEG_LINETO) {
-                Point to = new Point(coords[0], -coords[1]);
-                contours.getLast().lineTo(to);
-            } else if (type == PathIterator.SEG_CUBICTO) {
-                // The final coords in a CUBICTO are the actual new outline point.
-                // The first two pairs are control points.
-                Point control1 = new Point(coords[0], -coords[1]);
-                Point control2 = new Point(coords[2], -coords[3]);
-                Point to = new Point(coords[4], -coords[5]);
-                contours.getLast().cubicTo(control1, control2, to);
-            } else if (type == PathIterator.SEG_CLOSE) {
-                // close path --> add line from last to first point
-                contours.getLast().close();
-            } else if (type == PathIterator.SEG_QUADTO) {
-                throw new UnsupportedOperationException("Only OTF-Fonts with cubic bezier curves are supported.");
-            }
-
-            pathIterator.next();
+        try {
+            contours = buildContours(pathIterator);
+        } catch(IllegalStateException e) {
+            throw new IllegalArgumentException("The provided font does not have a valid format in the path description of this character.");
         }
 
         Rectangle bounds = glyphOutline.getBounds();
@@ -71,5 +48,41 @@ public class JavaAwtFontParser implements FontParser {
         );
 
         return new Glyph(character, fontSize, contours, boundingBox);
+    }
+
+    private List<Contour> buildContours(PathIterator pathIterator) {
+        List<Contour> contours = new ArrayList<>();
+        double[] coords = new double[6];
+        Contour.Builder builder = Contour.builder();
+
+        while (!pathIterator.isDone()) {
+            int type = pathIterator.currentSegment(coords);
+
+            if (type == PathIterator.SEG_MOVETO) {
+                if(builder.isStarted()) {
+                    contours.add(builder.build());
+                    builder = Contour.builder();
+                }
+                Point to = new Point(coords[0], -coords[1]);
+                builder.startAt(to);
+            } else if (type == PathIterator.SEG_LINETO) {
+                Point to = new Point(coords[0], -coords[1]);
+                builder.lineTo(to);
+            } else if (type == PathIterator.SEG_CUBICTO) {
+                // The final coords in a CUBICTO are the actual new outline point.
+                // The first two pairs are control points.
+                Point control1 = new Point(coords[0], -coords[1]);
+                Point control2 = new Point(coords[2], -coords[3]);
+                Point to = new Point(coords[4], -coords[5]);
+                builder.cubicTo(control1, control2, to);
+            } else if (type == PathIterator.SEG_QUADTO) {
+                throw new UnsupportedOperationException("Only OTF-Fonts with cubic bezier curves are supported.");
+            }
+            pathIterator.next();
+        }
+
+        contours.add(builder.build());
+
+        return contours;
     }
 }

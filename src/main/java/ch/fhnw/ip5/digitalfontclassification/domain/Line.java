@@ -1,8 +1,5 @@
 package ch.fhnw.ip5.digitalfontclassification.domain;
 
-import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
-
 public class Line extends Segment {
 
     private double length = -1;
@@ -20,8 +17,8 @@ public class Line extends Segment {
      */
     public Line getPerpendicularLine(Point from, double length) {
         // turn line into vector
-        double vectorX = getTo().getX() - getFrom().getX();
-        double vectorY = getTo().getY() - getFrom().getY();
+        double vectorX = getTo().x() - getFrom().x();
+        double vectorY = getTo().y() - getFrom().y();
 
         // normalize vector
         double originalLength = Math.sqrt(vectorX*vectorX + vectorY*vectorY);
@@ -32,7 +29,7 @@ public class Line extends Segment {
         double rotatedVectorX = -normalizedVectorY;
         double rotatedVectorY = normalizedVectorX;
 
-        Point to = new Point(rotatedVectorX * length + from.getX(), rotatedVectorY * length + from.getY());
+        Point to = new Point(rotatedVectorX * length + from.x(), rotatedVectorY * length + from.y());
 
         return new Line(from, to);
     }

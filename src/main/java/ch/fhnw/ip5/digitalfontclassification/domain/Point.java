@@ -1,25 +1,19 @@
 package ch.fhnw.ip5.digitalfontclassification.domain;
 
-public class Point {
-    private final double x;
-    private final double y;
-
-    public Point(double x, double y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public double getX() {
-        return x;
-    }
-    public double getY() {
-        return y;
-    }
+public record Point(double x, double y) {
 
     public double distanceTo(Point p) {
-        double deltaX = getX() - p.getX();
-        double deltaY = getY() - p.getY();
-        return Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+        double deltaX = x() - p.x();
+        double deltaY = y() - p.y();
+        return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Point point = (Point) obj;
+        return Double.compare(point.x, x) == 0 && Double.compare(point.y, y) == 0;
     }
 
     @Override

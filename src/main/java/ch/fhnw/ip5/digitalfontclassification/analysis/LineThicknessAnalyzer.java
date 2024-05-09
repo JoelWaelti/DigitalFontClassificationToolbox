@@ -34,8 +34,8 @@ public class LineThicknessAnalyzer {
 
     private static Line thicknessLineAtMiddleOfSegment(Line line, Glyph glyph) {
         // Calculate point at the middle of the line
-        double centerX = (line.getFrom().getX() + line.getTo().getX()) / 2;
-        double centerY = (line.getFrom().getY() + line.getTo().getY()) / 2;
+        double centerX = (line.getFrom().x() + line.getTo().x()) / 2;
+        double centerY = (line.getFrom().y() + line.getTo().y()) / 2;
         Point center = new Point(centerX, centerY);
 
         // Define a length for the perpendicular line, so that it is certainly long enough to cross the entire glyph
@@ -76,19 +76,19 @@ public class LineThicknessAnalyzer {
 
     private static Point getLineLineIntersection(Line line1, Line line2) {
         // use awt lines to calculate intersection
-        Line2D awtLine1 = new Line2D.Double(line1.getFrom().getX(), line1.getFrom().getY(), line1.getTo().getX(), line1.getTo().getY());
-        Line2D awtLine2 = new Line2D.Double(line2.getFrom().getX(), line2.getFrom().getY(), line2.getTo().getX(), line2.getTo().getY());
+        Line2D awtLine1 = new Line2D.Double(line1.getFrom().x(), line1.getFrom().y(), line1.getTo().x(), line1.getTo().y());
+        Line2D awtLine2 = new Line2D.Double(line2.getFrom().x(), line2.getFrom().y(), line2.getTo().x(), line2.getTo().y());
 
         if(awtLine1.intersectsLine(awtLine2)) {
-            double x1 = line1.getFrom().getX();
-            double y1 = line1.getFrom().getY();
-            double x2 = line1.getTo().getX();
-            double y2 = line1.getTo().getY();
+            double x1 = line1.getFrom().x();
+            double y1 = line1.getFrom().y();
+            double x2 = line1.getTo().x();
+            double y2 = line1.getTo().y();
 
-            double x3 = line2.getFrom().getX();
-            double y3 = line2.getFrom().getY();
-            double x4 = line2.getTo().getX();
-            double y4 = line2.getTo().getY();
+            double x3 = line2.getFrom().x();
+            double y3 = line2.getFrom().y();
+            double x4 = line2.getTo().x();
+            double y4 = line2.getTo().y();
 
             // Denominator for the equations of the lines
             double denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
