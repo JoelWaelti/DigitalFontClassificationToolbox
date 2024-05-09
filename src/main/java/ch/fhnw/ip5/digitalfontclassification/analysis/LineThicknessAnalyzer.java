@@ -5,11 +5,12 @@ import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class LineThicknessAnalyzer {
     public static List<Double> computeThicknessAlongPathAtMiddleOfSegments(Glyph glyph) {
         return computeThicknessLinesAlongPathAtMiddleOfSegments(glyph).stream()
-                .map(Line::getLength).toList();
+                .map(Line::getLength).collect(Collectors.toList());
     }
 
     public static List<Line> computeThicknessLinesAlongPathAtMiddleOfSegments(Glyph glyph) {
