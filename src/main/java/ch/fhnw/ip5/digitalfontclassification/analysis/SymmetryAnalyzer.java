@@ -36,7 +36,7 @@ public class SymmetryAnalyzer {
         return true;
     }
 
-    // TODO: equals? aaber wie mit toleranz umgehen?
+    // TODO: equals? aber wie mit toleranz umgehen?
     private static boolean contains(List<Point> allPoints, Point point) {
         double tol = 1;
         for (Point p : allPoints) {

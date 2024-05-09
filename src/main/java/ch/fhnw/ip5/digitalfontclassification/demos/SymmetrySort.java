@@ -14,7 +14,7 @@ import java.nio.file.StandardCopyOption;
 
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SymmetryAnalyzer.determineSymmetry;
 
-public class sortIsSymmetric {
+public class SymmetrySort {
 
     // Args: <source font> <source visualization> <target> <character> <fontSize> <flatness>
     public static void main(String[] args) throws IOException, FontFormatException {
