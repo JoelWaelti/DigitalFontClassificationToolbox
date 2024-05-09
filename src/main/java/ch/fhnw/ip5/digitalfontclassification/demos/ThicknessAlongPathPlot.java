@@ -63,7 +63,7 @@ public class ThicknessAlongPathPlot {
                 (s1, s2) -> (int) (s1.getFrom().distanceTo(origin) - s2.getFrom().distanceTo(origin))
         );
         int closestSegmentIndex = segments.indexOf(closestSegment);
-        Collections.rotate(thicknesses, closestSegmentIndex);
+        Collections.rotate(thicknesses, -closestSegmentIndex);
 
         return thicknesses;
     }
