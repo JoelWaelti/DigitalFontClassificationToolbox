@@ -41,4 +41,8 @@ public class Line extends Segment {
 
         return length;
     }
+
+    public Vector toVector() {
+        return new Vector(getTo().x() - getFrom().x(), getTo().y() - getFrom().y());
+    }
 }
