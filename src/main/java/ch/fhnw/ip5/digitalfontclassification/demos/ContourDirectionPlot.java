@@ -57,7 +57,7 @@ public class ContourDirectionPlot {
             dataset.addValue(directions[i], "directions", String.valueOf(i));
         }
 
-        return ChartFactory.createBarChart(
+        JFreeChart chart = ChartFactory.createBarChart(
                 fontName +": " + character,
                 "Segment Nr.",
                 "Thickness",
@@ -67,5 +67,7 @@ public class ContourDirectionPlot {
                 true,
                 false
         );
+        PlotUtil.styleChart(chart);
+        return chart;
     }
 }

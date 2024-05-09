@@ -75,7 +75,7 @@ public class ThicknessAlongPathPlot {
             dataset.addValue(thicknesses.get(i), "thicknesses", String.valueOf(i));
         }
 
-        return ChartFactory.createBarChart(
+        JFreeChart chart = ChartFactory.createBarChart(
             fontName +": " + character,
             "Segment Nr.",
             "Thickness",
@@ -85,5 +85,7 @@ public class ThicknessAlongPathPlot {
             true,
             false
         );
+        PlotUtil.styleChart(chart);
+        return chart;
     }
 }
