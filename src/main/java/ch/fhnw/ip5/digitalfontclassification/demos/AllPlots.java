@@ -31,8 +31,8 @@ import java.util.List;
 
 public class AllPlots extends JPanel {
 
-    private final int width = 800;
-    private final int height = 600;
+    private final int width = 1600;
+    private final int height = 1200;
     List<JFreeChart> charts = new ArrayList<>();
     List<ChartPanel> panels = new ArrayList<>();
     ChartLayoutInstructions layoutInstructions;

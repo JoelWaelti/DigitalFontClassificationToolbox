@@ -64,7 +64,7 @@ public class PlotUtil {
                 false
         );
 
-        PlotUtil.styleChart(chart);
+        PlotUtil.styleChartColorFlow(chart);
         return chart;
     }
 
@@ -89,7 +89,7 @@ public class PlotUtil {
                 false
         );
 
-        PlotUtil.styleChart(chart);
+        PlotUtil.styleChartColorFlow(chart);
         return chart;
     }
 
