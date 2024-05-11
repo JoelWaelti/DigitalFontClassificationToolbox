@@ -85,7 +85,7 @@ public class ThicknessAlongPathPlot {
             true,
             false
         );
-        PlotUtil.styleChart(chart);
+        PlotUtil.styleChartColorFlow(chart);
         return chart;
     }
 }

@@ -1,67 +1,107 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
+import ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import ch.fhnw.ip5.digitalfontclassification.domain.Point;
+import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer.computeThicknessAlongPathAtMiddleOfSegments;
 
-public class FlattenedGlyphView extends JPanel {
-    private Glyph glyph;
+public class FlattenedGlyphView {
 
-    public FlattenedGlyphView(Glyph glyph) {
-        this.glyph = glyph;
+    // Args: <source path> <target path> <character> <font size> <flatness>
+    public static void main(String[] args) throws IOException {
+        String sourcePath = args[0];
+        String targetPath = args[1];
+        char character = args[2].charAt(0);
+        float fontSize = Float.parseFloat(args[3]);
+        double flatness = Double.parseDouble(args[4]);
+
+        PlotUtil.doForEachFontInDirectory(sourcePath, fontPath -> {
+            try {
+                System.out.println(fontPath);
+
+                FontParser parser = new JavaAwtFontParser(fontPath.toString());
+                Glyph glyph = parser.getGlyph(character, fontSize);
+                Flattener flattener = new JavaAwtFlattener(flatness);
+                Glyph flattenedGlyph = flattener.flatten(glyph);
+
+                BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph);
+
+                Path relativePath = Path.of(sourcePath).relativize(fontPath);
+                Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
+                File plotFile = plotFilePath.toFile();
+                if (!Files.exists(plotFilePath.getParent())) {
+                    Files.createDirectories(plotFilePath.getParent());
+                }
+
+                ImageIO.write(bufferedImage, "PNG", plotFile);
+            }  catch (Exception e) {
+                System.err.println("Error processing " + fontPath + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.scale(1, -1);
-        g2d.translate(0, -getHeight());
+    private static BufferedImage getVisualizationAsBufferedImage(Glyph glyph) {
+        BufferedImage bi = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = bi.createGraphics();
 
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(0,0,bi.getWidth(),bi.getHeight());
+
+        g2d.scale(1, -1);
+
+        int tolerance = 100;
+        g2d.translate(0, -bi.getHeight() + tolerance);
+
+        drawGlyphWithColorFlow(glyph, g2d);
+        return bi;
+    }
+
+    private static void drawGlyphWithColorFlow(Glyph glyph, Graphics2D g2d) {
         List<Contour> contours = glyph.getContours();
         for (Contour contour : contours) {
-            List<ch.fhnw.ip5.digitalfontclassification.domain.Point> outlinePoints = contour.getOutlinePoints();
-
             // Draw segments connecting outline points
-            g2d.setColor(Color.BLACK);
-            List<Segment> segments = contour.getSegments();
-            for (Segment segment : segments) {
-                ch.fhnw.ip5.digitalfontclassification.domain.Point from = segment.getFrom();
+            List<Segment> segments = new ArrayList<>(contour.getSegments());
+            int totalSegemnts = segments.size();
+
+            Point origin = new Point(0,0);
+            Segment closestSegment = Collections.min(
+                segments,
+                (s1, s2) -> (int) (s1.getFrom().distanceTo(origin) - s2.getFrom().distanceTo(origin))
+            );
+            int closestSegmentIndex = segments.indexOf(closestSegment);
+            Collections.rotate(segments, -closestSegmentIndex);
+
+            for (int i = 0; i < totalSegemnts; i++) {
+                Segment segment = segments.get(i);
+                float hue = (float) i / (totalSegemnts - 1);
+
+                Color color = Color.getHSBColor(hue, 1.0f, 1.0f);
+                g2d.setColor(color);
+
+                float lineThickness = 3.0f; // You can adjust the thickness here
+                g2d.setStroke(new BasicStroke(lineThickness));
+
+                Point from = segment.getFrom();
                 Point to = segment.getTo();
                 g2d.drawLine((int) from.x(), (int) from.y(), (int) to.x(), (int) to.y());
             }
         }
+
     }
 
-    public static void main(String[] args) throws IOException, FontFormatException {
-        String fontPath = args[0];
-        char character = args[1].charAt(0);
-        float fontSize = Float.parseFloat(args[2]);
-        double flatness = Double.parseDouble(args[3]);
-        FontParser parser = new JavaAwtFontParser(fontPath);
-        Glyph glyph = parser.getGlyph(character, fontSize);
-        Flattener flattener = new JavaAwtFlattener(flatness);
-        Glyph flattenedGlyph = flattener.flatten(glyph);
-
-        System.out.println(
-                flattenedGlyph.getContours().stream()
-                .mapToInt(contour -> contour.getSegments().size())
-                .sum()
-        );
-
-        List<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(flattenedGlyph);
-        System.out.println(thicknesses);
-
-        JFrame frame = new JFrame();
-        frame.setSize(400, 400);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().add(new FlattenedGlyphView(flattenedGlyph));
-        frame.setVisible(true);
-    }
 }

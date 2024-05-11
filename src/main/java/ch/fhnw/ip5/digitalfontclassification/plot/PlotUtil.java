@@ -31,6 +31,17 @@ public class PlotUtil {
         plot.setRangeGridlinePaint(Color.GRAY);
     }
 
+    public static void styleChartColorFlow(JFreeChart chart) {
+        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setOutlineVisible(false);
+        BarRenderer renderer = new ColorFlowBarRenderer();
+        renderer.setBarPainter(new StandardBarPainter());
+        renderer.setShadowVisible(false);
+        plot.setRangeGridlinePaint(Color.GRAY);
+        plot.setRenderer(renderer);
+    }
+
     private static List<Path> findOTFFiles(String sourcePath) throws IOException {
         List<Path> otfFiles = new ArrayList<>();
         Path start = Paths.get(sourcePath);
@@ -46,5 +57,15 @@ public class PlotUtil {
         });
 
         return otfFiles;
+    }
+
+
+    static class ColorFlowBarRenderer extends BarRenderer {
+        @Override
+        public Paint getItemPaint(int row, int column) {
+            // Generate a unique color for each bar
+            float hue = (float) column / (getPlot().getDataset().getColumnCount() - 1);
+            return Color.getHSBColor(hue, 1.0f, 1.0f);  // Full saturation and brightness
+        }
     }
 }

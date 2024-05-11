@@ -74,7 +74,7 @@ public class SlopeAlongContourPlot {
                 false
         );
 
-        PlotUtil.styleChart(chart);
+        PlotUtil.styleChartColorFlow(chart);
         return chart;
     }
 }
