@@ -8,12 +8,6 @@ import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.Plot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.chart.renderer.category.StandardBarPainter;
-import org.jfree.data.category.DefaultCategoryDataset;
 
 import java.awt.*;
 import java.io.File;
@@ -33,16 +27,6 @@ public class SlopeAlongContourPlot {
             try {
                 System.out.println(fontPath);
 
-                FontParser parser = new JavaAwtFontParser(fontPath.toString());
-                Glyph glyph = parser.getGlyph(character, fontSize);
-                Flattener flattener = new JavaAwtFlattener(flatness);
-                Glyph flattenedGlyph = flattener.flatten(glyph);
-
-                // it's assumed that the first contour is the main enclosing contour of the glyph
-                Point origin = new Point(0,0);
-                Contour contour = flattenedGlyph.getContours().getFirst().moveStartPointToSegmentClosestTo(origin);
-                double[] slopes = SlopeAnalyzer.getSlopesAlongContour(contour);
-
                 Path relativePath = Path.of(sourcePath).relativize(fontPath);
                 Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
                 File plotFile = plotFilePath.toFile();
@@ -50,7 +34,7 @@ public class SlopeAlongContourPlot {
                     Files.createDirectories(plotFilePath.getParent());
                 }
 
-                JFreeChart chart = getChart(slopes, parser.getFontName(), character);
+                JFreeChart chart = getChart(fontPath, character, fontSize, flatness);
                 ChartUtilities.saveChartAsJPEG(plotFile, chart, 600, 800);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -58,25 +42,22 @@ public class SlopeAlongContourPlot {
         });
     }
 
-    private static JFreeChart getChart(double[] directions, String fontName, char character) {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    public static JFreeChart getChart(Path fontPath, char character, float fontSize, double flatness) throws IOException, FontFormatException {
+        FontParser parser = new JavaAwtFontParser(fontPath.toString());
+        Glyph glyph = parser.getGlyph(character, fontSize);
+        Flattener flattener = new JavaAwtFlattener(flatness);
+        Glyph flattenedGlyph = flattener.flatten(glyph);
 
-        for(int i = 0; i < directions.length; i++) {
-            dataset.addValue(directions[i], "directions", String.valueOf(i));
-        }
+        // it's assumed that the first contour is the main enclosing contour of the glyph
+        Point origin = new Point(0,0);
+        Contour contour = flattenedGlyph.getContours().getFirst().moveStartPointToSegmentClosestTo(origin);
+        double[] slopes = SlopeAnalyzer.getSlopesAlongContour(contour);
 
-        var chart = ChartFactory.createBarChart(
-                fontName +": " + character,
+        return PlotUtil.getBarChart(
+                parser.getFontName() + ": " + character,
                 "Segment Nr.",
                 "Slope",
-                dataset,
-                PlotOrientation.VERTICAL,
-                true,
-                true,
-                false
+                slopes
         );
-
-        PlotUtil.styleChartColorFlow(chart);
-        return chart;
     }
 }

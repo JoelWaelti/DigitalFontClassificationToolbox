@@ -1,6 +1,7 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
+import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -8,6 +9,7 @@ import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,12 +33,6 @@ public class ThicknessAlongPathPlot {
             try {
                 System.out.println(fontPath);
 
-                FontParser parser = new JavaAwtFontParser(fontPath.toString());
-                Glyph glyph = parser.getGlyph(character, fontSize);
-                Flattener flattener = new JavaAwtFlattener(flatness);
-                Glyph flattenedGlyph = flattener.flatten(glyph);
-                List<Double> thicknesses = getThicknesses(flattenedGlyph);
-
                 Path relativePath = Path.of(originPath).relativize(fontPath);
                 Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
                 File plotFile = plotFilePath.toFile();
@@ -44,7 +40,7 @@ public class ThicknessAlongPathPlot {
                     Files.createDirectories(plotFilePath.getParent());
                 }
 
-                JFreeChart chart = getChart(thicknesses, parser.getFontName(), character);
+                JFreeChart chart = getChart(fontPath, character, fontSize, flatness);
                 ChartUtilities.saveChartAsJPEG(plotFile, chart, 600, 800);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -68,24 +64,18 @@ public class ThicknessAlongPathPlot {
         return thicknesses;
     }
 
-    public static JFreeChart getChart(List<Double> thicknesses, String fontName, char character) {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    public static JFreeChart getChart(Path fontPath, char character, float fontSize, double flatness) throws IOException, FontFormatException {
+        FontParser parser = new JavaAwtFontParser(fontPath.toString());
+        Glyph glyph = parser.getGlyph(character, fontSize);
+        Flattener flattener = new JavaAwtFlattener(flatness);
+        Glyph flattenedGlyph = flattener.flatten(glyph);
+        List<Double> thicknesses = getThicknesses(flattenedGlyph);
 
-        for(int i = 0; i < thicknesses.size(); i++) {
-            dataset.addValue(thicknesses.get(i), "thicknesses", String.valueOf(i));
-        }
-
-        JFreeChart chart = ChartFactory.createBarChart(
-            fontName +": " + character,
-            "Segment Nr.",
-            "Thickness",
-            dataset,
-            PlotOrientation.VERTICAL,
-            true,
-            true,
-            false
+        return PlotUtil.getBarChart(
+                parser.getFontName() + ": " + character,
+                "Segment Nr.",
+                "Slope",
+                thicknesses
         );
-        PlotUtil.styleChartColorFlow(chart);
-        return chart;
     }
 }

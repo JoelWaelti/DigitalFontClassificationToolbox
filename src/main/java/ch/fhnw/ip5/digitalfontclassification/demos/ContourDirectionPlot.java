@@ -2,13 +2,16 @@ package ch.fhnw.ip5.digitalfontclassification.demos;
 
 import ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
+import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,16 +29,6 @@ public class ContourDirectionPlot {
             try {
                 System.out.println(fontPath);
 
-                FontParser parser = new JavaAwtFontParser(fontPath.toString());
-                Glyph glyph = parser.getGlyph(character, fontSize);
-                Flattener flattener = new JavaAwtFlattener(flatness);
-                Glyph flattenedGlyph = flattener.flatten(glyph);
-
-                // it's assumed that the first contour is the main enclosing contour of the glyph
-                Point origin = new Point(0,0);
-                Contour contour = flattenedGlyph.getContours().getFirst().moveStartPointToSegmentClosestTo(origin);
-                double[] directions = ContourDirectionAnalyzer.getDirectionsAlongContour(contour);
-
                 Path relativePath = Path.of(sourcePath).relativize(fontPath);
                 Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
                 File plotFile = plotFilePath.toFile();
@@ -43,7 +36,7 @@ public class ContourDirectionPlot {
                     Files.createDirectories(plotFilePath.getParent());
                 }
 
-                JFreeChart chart = getChart(directions, parser.getFontName(), character);
+                JFreeChart chart = getChart(fontPath, character, fontSize, flatness);
                 ChartUtilities.saveChartAsJPEG(plotFile, chart, 600, 800);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -51,24 +44,22 @@ public class ContourDirectionPlot {
         });
     }
 
-    private static JFreeChart getChart(double[] directions, String fontName, char character) {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    public static JFreeChart getChart(Path fontPath, char character, float fontSize, double flatness) throws IOException, FontFormatException {
+        FontParser parser = new JavaAwtFontParser(fontPath.toString());
+        Glyph glyph = parser.getGlyph(character, fontSize);
+        Flattener flattener = new JavaAwtFlattener(flatness);
+        Glyph flattenedGlyph = flattener.flatten(glyph);
 
-        for(int i = 0; i < directions.length; i++) {
-            dataset.addValue(directions[i], "directions", String.valueOf(i));
-        }
+        // it's assumed that the first contour is the main enclosing contour of the glyph
+        Point origin = new Point(0,0);
+        Contour contour = flattenedGlyph.getContours().getFirst().moveStartPointToSegmentClosestTo(origin);
+        double[] directions = ContourDirectionAnalyzer.getDirectionsAlongContour(contour);
 
-        JFreeChart chart = ChartFactory.createBarChart(
-                fontName +": " + character,
+        return PlotUtil.getBarChart(
+                parser.getFontName() + ": " + character,
                 "Segment Nr.",
                 "Direction in Degrees",
-                dataset,
-                PlotOrientation.VERTICAL,
-                true,
-                true,
-                false
+                directions
         );
-        PlotUtil.styleChart(chart);
-        return chart;
     }
 }
