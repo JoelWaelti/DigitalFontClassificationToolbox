@@ -143,11 +143,11 @@ public class AllPlots extends JPanel {
                     Files.createDirectories(plotFilePath.getParent());
                 }
 
-                // Generate dummy charts
+                // Generate charts
                 List<JFreeChart> charts = new ArrayList<>();
-                for (int i = 1; i <= 4; i++) {
-                    charts.add(createChart(createDataset(i), "Chart " + i));
-                }
+                charts.add(ContourDirectionPlot.getChart(fontPath, character, fontSize, flatness));
+                charts.add(SlopeAlongContourPlot.getChart(fontPath, character, fontSize, flatness));
+                charts.add(ThicknessAlongPathPlot.getChart(fontPath, character, fontSize, flatness));
 
                 ChartLayoutInstructions layoutInstructions = new ChartLayoutInstructions(2, 2);
                 AllPlots customChartPanel = new AllPlots(charts, layoutInstructions);
