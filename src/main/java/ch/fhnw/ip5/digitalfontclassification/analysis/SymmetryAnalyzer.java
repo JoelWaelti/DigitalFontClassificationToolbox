@@ -2,9 +2,49 @@ package ch.fhnw.ip5.digitalfontclassification.analysis;
 
 import ch.fhnw.ip5.digitalfontclassification.domain.Glyph;
 import ch.fhnw.ip5.digitalfontclassification.domain.Point;
+import ch.fhnw.ip5.digitalfontclassification.domain.Segment;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import static ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer.computeThicknessAlongPathAtMiddleOfSegments;
+
 public class SymmetryAnalyzer {
+    public static double[] getHaarstrichRange(Glyph glyph) {
+        List<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(glyph);
+
+        Point origin = new Point(0,0);
+        List<Segment> segments = glyph.getContours().getFirst().getSegments();
+        Segment closestSegment = Collections.min(
+            segments,
+            (s1, s2) -> (int) (s1.getFrom().distanceTo(origin) - s2.getFrom().distanceTo(origin))
+        );
+        int closestSegmentIndex = segments.indexOf(closestSegment);
+        Collections.rotate(thicknesses, -closestSegmentIndex);
+
+        double maxThickness = Collections.max(thicknesses);
+        List<Integer> maxThicknessIndices = new ArrayList<>();
+        for (int i = 0; i < thicknesses.size(); i++) {
+            if (thicknesses.get(i) == maxThickness) {
+                maxThicknessIndices.add(i);
+            }
+        }
+
+        double[] range = new double[thicknesses.size()];
+        if(maxThicknessIndices.size() % 4  == 0) {
+            for(int j = 1; j < maxThicknessIndices.size(); j=j+2){
+                int n = maxThicknessIndices.get(j-1);
+                while (maxThicknessIndices.get(j) >= n) {
+                    range[n] = thicknesses.get(n);
+                    n++;
+                }
+
+            }
+        }
+
+        return range;
+    }
     public static boolean determineSymmetry(Glyph glyph) {
         List<Point> outline_points = glyph.getContours().getFirst().getOutlinePoints();
 

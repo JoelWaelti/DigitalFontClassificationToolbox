@@ -42,7 +42,7 @@ public class SymmetrySort {
                 if (symmetry) {
                     System.out.println(file.getPath());
                     Path sourcePlot = Path.of(sourceVisPath + "/" + fontClass.getName() + "/" + file.getName() + ".jpg");
-                    Path targetPlot = Path.of(target + "/" + file.getName() + ".jpg");
+                    Path targetPlot = Path.of(target + "/" + fontClass.getName() + "/" + file.getName() + ".jpg");
 
                     if (!Files.exists(targetPlot.getParent())) {
                         Files.createDirectories(targetPlot.getParent());
