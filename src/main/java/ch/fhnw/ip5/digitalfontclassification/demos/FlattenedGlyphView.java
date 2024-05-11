@@ -67,28 +67,20 @@ public class FlattenedGlyphView {
         int tolerance = 100;
         g2d.translate(0, -bi.getHeight() + tolerance);
 
-        drawGlyphWithColorFlow(glyph, g2d);
+        drawContoursWithColorFlow(glyph.getContours(), g2d);
         return bi;
     }
 
-    private static void drawGlyphWithColorFlow(Glyph glyph, Graphics2D g2d) {
-        List<Contour> contours = glyph.getContours();
+    private static void drawContoursWithColorFlow(List<Contour> contours, Graphics2D g2d) {
         for (Contour contour : contours) {
             // Draw segments connecting outline points
-            List<Segment> segments = new ArrayList<>(contour.getSegments());
-            int totalSegemnts = segments.size();
+            Contour rotatedContour = contour.moveStartPointToSegmentClosestTo(new Point(0,0));
+            List<Segment> segments = rotatedContour.getSegments();
+            int totalSegments = segments.size();
 
-            Point origin = new Point(0,0);
-            Segment closestSegment = Collections.min(
-                segments,
-                (s1, s2) -> (int) (s1.getFrom().distanceTo(origin) - s2.getFrom().distanceTo(origin))
-            );
-            int closestSegmentIndex = segments.indexOf(closestSegment);
-            Collections.rotate(segments, -closestSegmentIndex);
-
-            for (int i = 0; i < totalSegemnts; i++) {
+            for (int i = 0; i < totalSegments; i++) {
                 Segment segment = segments.get(i);
-                float hue = (float) i / (totalSegemnts - 1);
+                float hue = (float) i / (totalSegments - 1);
 
                 Color color = Color.getHSBColor(hue, 1.0f, 1.0f);
                 g2d.setColor(color);
