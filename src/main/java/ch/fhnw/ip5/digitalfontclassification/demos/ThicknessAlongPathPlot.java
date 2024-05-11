@@ -74,7 +74,7 @@ public class ThicknessAlongPathPlot {
         return PlotUtil.getBarChart(
                 parser.getFontName() + ": " + character,
                 "Segment Nr.",
-                "Slope",
+                "Thickness",
                 thicknesses
         );
     }

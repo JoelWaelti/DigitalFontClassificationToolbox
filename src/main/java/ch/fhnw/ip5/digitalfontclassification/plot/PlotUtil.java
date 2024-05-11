@@ -59,7 +59,7 @@ public class PlotUtil {
                 yLabel,
                 dataset,
                 PlotOrientation.VERTICAL,
-                true,
+                false,
                 true,
                 false
         );
@@ -84,7 +84,7 @@ public class PlotUtil {
                 yLabel,
                 dataset,
                 PlotOrientation.VERTICAL,
-                true,
+                false,
                 true,
                 false
         );
