@@ -3,6 +3,7 @@ package ch.fhnw.ip5.digitalfontclassification.demos;
 import ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.analysis.SlopeAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
+import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
@@ -38,7 +39,8 @@ public class SlopeAlongContourPlot {
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 
                 // it's assumed that the first contour is the main enclosing contour of the glyph
-                Contour contour = flattenedGlyph.getContours().getFirst();
+                Point origin = new Point(0,0);
+                Contour contour = flattenedGlyph.getContours().getFirst().moveStartPointToSegmentClosestTo(origin);
                 double[] slopes = SlopeAnalyzer.getSlopesAlongContour(contour);
 
                 Path relativePath = Path.of(sourcePath).relativize(fontPath);
@@ -66,7 +68,7 @@ public class SlopeAlongContourPlot {
         var chart = ChartFactory.createBarChart(
                 fontName +": " + character,
                 "Segment Nr.",
-                "Thickness",
+                "Slope",
                 dataset,
                 PlotOrientation.VERTICAL,
                 true,

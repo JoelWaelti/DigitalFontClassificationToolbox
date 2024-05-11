@@ -32,7 +32,8 @@ public class ContourDirectionPlot {
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 
                 // it's assumed that the first contour is the main enclosing contour of the glyph
-                Contour contour = flattenedGlyph.getContours().getFirst();
+                Point origin = new Point(0,0);
+                Contour contour = flattenedGlyph.getContours().getFirst().moveStartPointToSegmentClosestTo(origin);
                 double[] directions = ContourDirectionAnalyzer.getDirectionsAlongContour(contour);
 
                 Path relativePath = Path.of(sourcePath).relativize(fontPath);
@@ -60,7 +61,7 @@ public class ContourDirectionPlot {
         JFreeChart chart = ChartFactory.createBarChart(
                 fontName +": " + character,
                 "Segment Nr.",
-                "Thickness",
+                "Direction in Degrees",
                 dataset,
                 PlotOrientation.VERTICAL,
                 true,

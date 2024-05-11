@@ -15,9 +15,9 @@ public class Contour {
     }
 
     private Contour(List<Segment> segments, List<Point> outlinePoints, List<Point> controlPoints) {
-        this.segments = Collections.unmodifiableList(segments);
-        this.outlinePoints = Collections.unmodifiableList(outlinePoints);
-        this.controlPoints = Collections.unmodifiableList(controlPoints);
+        this.segments = List.copyOf(segments);
+        this.outlinePoints = List.copyOf(outlinePoints);
+        this.controlPoints = List.copyOf(controlPoints);
     }
 
     public List<Segment> getSegments() {
@@ -30,6 +30,17 @@ public class Contour {
 
     public List<Point> getControlPoints() {
         return this.controlPoints;
+    }
+
+    public Contour moveStartPointToSegmentClosestTo(Point p) {
+        List<Segment> movedSegments = new LinkedList<>(segments);
+        Segment closestSegment = Collections.min(
+                movedSegments,
+                (s1, s2) -> (int) (s1.getFrom().distanceTo(p) - s2.getFrom().distanceTo(p))
+        );
+        int closestSegmentIndex = segments.indexOf(closestSegment);
+        Collections.rotate(movedSegments, -closestSegmentIndex);
+        return new Contour(movedSegments, outlinePoints, controlPoints);
     }
 
     public static class Builder {
