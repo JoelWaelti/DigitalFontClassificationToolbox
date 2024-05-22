@@ -7,17 +7,20 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-public class JavaAwtFontParser implements FontParser {
+public class JavaAwtFontParser extends FontParser {
 
     private final Font defaultFont;
     private final FontRenderContext frc;
 
-    public JavaAwtFontParser(String fontPath) throws IOException, FontFormatException {
-        defaultFont = Font.createFont(java.awt.Font.TRUETYPE_FONT, new File(fontPath));
-        frc = new FontRenderContext(null, true, true);
+    public JavaAwtFontParser(String fontPath) throws FontParserException {
+        try {
+            defaultFont = Font.createFont(java.awt.Font.TRUETYPE_FONT, new File(fontPath));
+            frc = new FontRenderContext(null, true, true);
+        } catch(FontFormatException | IOException e) {
+            throw new FontParserException("Error while parsing font with Java AWT", e);
+        }
     }
 
     @Override
@@ -47,42 +50,11 @@ public class JavaAwtFontParser implements FontParser {
                 bounds.getMaxY()
         );
 
-        return new Glyph(character, fontSize, contours, boundingBox);
+        return new Glyph(character, contours, boundingBox);
     }
 
-    private List<Contour> buildContours(PathIterator pathIterator) {
-        List<Contour> contours = new ArrayList<>();
-        double[] coords = new double[6];
-        Contour.Builder builder = Contour.builder();
-
-        while (!pathIterator.isDone()) {
-            int type = pathIterator.currentSegment(coords);
-
-            if (type == PathIterator.SEG_MOVETO) {
-                if(builder.isStarted()) {
-                    contours.add(builder.build());
-                    builder = Contour.builder();
-                }
-                Point to = new Point(coords[0], -coords[1]);
-                builder.startAt(to);
-            } else if (type == PathIterator.SEG_LINETO) {
-                Point to = new Point(coords[0], -coords[1]);
-                builder.lineTo(to);
-            } else if (type == PathIterator.SEG_CUBICTO) {
-                // The final coords in a CUBICTO are the actual new outline point.
-                // The first two pairs are control points.
-                Point control1 = new Point(coords[0], -coords[1]);
-                Point control2 = new Point(coords[2], -coords[3]);
-                Point to = new Point(coords[4], -coords[5]);
-                builder.cubicTo(control1, control2, to);
-            } else if (type == PathIterator.SEG_QUADTO) {
-                throw new UnsupportedOperationException("Only OTF-Fonts with cubic bezier curves are supported.");
-            }
-            pathIterator.next();
-        }
-
-        contours.add(builder.build());
-
-        return contours;
+    @Override
+    public Glyph getGlyph(char c) {
+        throw new UnsupportedOperationException();
     }
 }

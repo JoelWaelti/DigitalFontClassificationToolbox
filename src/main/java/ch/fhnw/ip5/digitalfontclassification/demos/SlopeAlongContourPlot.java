@@ -1,15 +1,11 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
-import ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.analysis.SlopeAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
-import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,7 +38,7 @@ public class SlopeAlongContourPlot {
         });
     }
 
-    public static JFreeChart getChart(Path fontPath, char character, float fontSize, double flatness) throws IOException, FontFormatException {
+    public static JFreeChart getChart(Path fontPath, char character, float fontSize, double flatness) throws FontParserException {
         FontParser parser = new JavaAwtFontParser(fontPath.toString());
         Glyph glyph = parser.getGlyph(character, fontSize);
         Flattener flattener = new JavaAwtFlattener(flatness);

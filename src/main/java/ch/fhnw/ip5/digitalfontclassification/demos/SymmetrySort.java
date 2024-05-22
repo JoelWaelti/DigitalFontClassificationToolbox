@@ -1,11 +1,7 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
-import ch.fhnw.ip5.digitalfontclassification.domain.Flattener;
-import ch.fhnw.ip5.digitalfontclassification.domain.FontParser;
-import ch.fhnw.ip5.digitalfontclassification.domain.Glyph;
-import ch.fhnw.ip5.digitalfontclassification.domain.JavaAwtFlattener;
-import ch.fhnw.ip5.digitalfontclassification.domain.JavaAwtFontParser;
 
-import java.awt.FontFormatException;
+import ch.fhnw.ip5.digitalfontclassification.domain.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,7 +13,7 @@ import static ch.fhnw.ip5.digitalfontclassification.analysis.SymmetryAnalyzer.de
 public class SymmetrySort {
 
     // Args: <source font> <source visualization> <target> <character> <fontSize> <flatness>
-    public static void main(String[] args) throws IOException, FontFormatException {
+    public static void main(String[] args) throws FontParserException, IOException {
         String originFontPath = args[0];
         File fontPath = new File(originFontPath);
 

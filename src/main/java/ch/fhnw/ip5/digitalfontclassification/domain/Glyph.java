@@ -5,14 +5,12 @@ import ch.fhnw.ip5.digitalfontclassification.domain.Contour;
 import java.util.List;
 
 public class Glyph {
-    private char character;
-    private float fontSize;
-    private List<Contour> contours;
-    private BoundingBox boundingBox;
+    private final char character;
+    private final List<Contour> contours;
+    private final BoundingBox boundingBox;
 
-    public Glyph(char character, float fontSize, List<Contour> contours, BoundingBox boundingBox) {
+    public Glyph(char character, List<Contour> contours, BoundingBox boundingBox) {
         this.character = character;
-        this.fontSize = fontSize;
         this.contours = contours;
         this.boundingBox = boundingBox;
     }
@@ -27,9 +25,5 @@ public class Glyph {
 
     public char getCharacter() {
         return character;
-    }
-
-    public float getFontSize() {
-        return fontSize;
     }
 }
