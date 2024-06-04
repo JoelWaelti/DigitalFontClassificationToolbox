@@ -1,5 +1,6 @@
 package ch.fhnw.ip5.digitalfontclassification.analysis;
 
+import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.MiddleOfLineThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.Glyph;
 import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 import ch.fhnw.ip5.digitalfontclassification.domain.Segment;
@@ -8,11 +9,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer.computeThicknessAlongPathAtMiddleOfSegments;
 
 public class SymmetryAnalyzer {
     public static double[] getHaarstrichRange(Glyph glyph) {
-        List<Double> thicknesses = computeThicknessAlongPathAtMiddleOfSegments(glyph);
+        List<Double> thicknesses =  new MiddleOfLineThicknessAnalyzer().computeThicknesses(glyph);
 
         Point origin = new Point(0,0);
         List<Segment> segments = glyph.getContours().getFirst().getSegments();

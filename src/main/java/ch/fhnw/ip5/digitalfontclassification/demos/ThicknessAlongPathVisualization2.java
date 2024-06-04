@@ -1,8 +1,9 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
+import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.EvenlyDistributedThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.MiddleOfLineThicknessAnalyzer;
-import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import ch.fhnw.ip5.digitalfontclassification.domain.Point;
+import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 
 import javax.imageio.ImageIO;
@@ -15,15 +16,16 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
-public class ThicknessAlongPathVisualization {
+public class ThicknessAlongPathVisualization2 {
 
-    // Args: <source path> <target path> <character> <font size> <flatness>
+    // Args: <source path> <target path> <character> <font size> <flatness> <spacing>
     public static void main(String[] args) throws IOException {
         String sourcePath = args[0];
         String targetPath = args[1];
         char character = args[2].charAt(0);
         float fontSize = Float.parseFloat(args[3]);
         double flatness = Double.parseDouble(args[4]);
+        double spacing = Double.parseDouble(args[5]);
 
         PlotUtil.doForEachFontInDirectory(sourcePath, fontPath -> {
             try {
@@ -34,7 +36,7 @@ public class ThicknessAlongPathVisualization {
                 Flattener flattener = new JavaAwtFlattener(flatness);
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 
-                BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph);
+                BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph, spacing);
 
                 Path relativePath = Path.of(sourcePath).relativize(fontPath);
                 Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
@@ -51,7 +53,7 @@ public class ThicknessAlongPathVisualization {
         });
     }
 
-    private static BufferedImage getVisualizationAsBufferedImage(Glyph glyph) {
+    private static BufferedImage getVisualizationAsBufferedImage(Glyph glyph, double spacing) {
         BufferedImage bi = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = bi.createGraphics();
 
@@ -64,7 +66,7 @@ public class ThicknessAlongPathVisualization {
         g2d.translate(0, -bi.getHeight() + tolerance);
 
         drawGlyph(glyph, g2d);
-        drawThicknessLinesWithColorFlow(glyph, g2d);
+        drawThicknessLinesWithColorFlow(glyph, spacing, g2d);
         return bi;
     }
 
@@ -82,8 +84,8 @@ public class ThicknessAlongPathVisualization {
         }
     }
 
-    private static void drawThicknessLinesWithColorFlow(Glyph glyph, Graphics2D g2d) {
-        List<Line> lines = new MiddleOfLineThicknessAnalyzer().computeThicknessLines(glyph);
+    private static void drawThicknessLinesWithColorFlow(Glyph glyph, double spacing, Graphics2D g2d) {
+        List<Line> lines = new EvenlyDistributedThicknessAnalyzer(spacing).computeThicknessLines(glyph);
         int totalLines = lines.size();
 
         Point origin = new Point(0,0);
@@ -103,16 +105,6 @@ public class ThicknessAlongPathVisualization {
             Color color = Color.getHSBColor(hue, 1.0f, 1.0f);
             g2d.setColor(color);
 
-            Point from = line.getFrom();
-            Point to = line.getTo();
-            g2d.drawLine((int) from.x(), (int) from.y(), (int) to.x(), (int) to.y());
-        }
-    }
-
-    private static void drawThicknessLines(Glyph glyph, Graphics2D g2d) {
-        List<Line> lines = new MiddleOfLineThicknessAnalyzer().computeThicknessLines(glyph);
-        g2d.setColor(Color.RED);
-        for(Line line : lines) {
             Point from = line.getFrom();
             Point to = line.getTo();
             g2d.drawLine((int) from.x(), (int) from.y(), (int) to.x(), (int) to.y());

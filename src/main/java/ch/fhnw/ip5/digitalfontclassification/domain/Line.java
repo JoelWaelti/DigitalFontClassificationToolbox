@@ -34,6 +34,12 @@ public class Line extends Segment {
         return new Line(from, to);
     }
 
+    public Point interpolate(double t) {
+        double x = this.getFrom().x() + t * (this.getTo().x() - this.getFrom().x());
+        double y = this.getFrom().y() + t * (this.getTo().y() - this.getFrom().y());
+        return new Point(x, y);
+    }
+
     public double getLength() {
         if (length < 0) {
             length = this.getFrom().distanceTo(this.getTo());

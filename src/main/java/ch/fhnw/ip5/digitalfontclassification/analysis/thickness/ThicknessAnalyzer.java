@@ -1,48 +1,24 @@
-package ch.fhnw.ip5.digitalfontclassification.analysis;
+package ch.fhnw.ip5.digitalfontclassification.analysis.thickness;
 
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
 
 import java.awt.geom.Line2D;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class LineThicknessAnalyzer {
-    public static List<Double> computeThicknessAlongPathAtMiddleOfSegments(Glyph glyph) {
-        return computeThicknessLinesAlongPathAtMiddleOfSegments(glyph).stream()
+public abstract class ThicknessAnalyzer {
+    public abstract List<Line> computeThicknessLines(Glyph glyph);
+
+    public List<Double> computeThicknesses(Glyph glyph) {
+        return computeThicknessLines(glyph).stream()
                 .map(Line::getLength).collect(Collectors.toList());
     }
 
-    public static List<Line> computeThicknessLinesAlongPathAtMiddleOfSegments(Glyph glyph) {
-        ArrayList<Line> thicknessLines = new ArrayList<>();
-
-        // It's assumed that this first contour is the main enclosing contour of the glyph
-        Contour contour = glyph.getContours().getFirst();
-
-        for(Segment s : contour.getSegments()) {
-            if(!(s instanceof Line line)) {
-                throw new IllegalArgumentException("Contours of the glyph can only contain lines for this operation. Consider flattening the entire glyph.");
-            }
-
-            Line thicknessLine = thicknessLineAtMiddleOfSegment(line, glyph);
-            if(thicknessLine != null) {
-                thicknessLines.add(thicknessLine);
-            }
-        }
-
-        return thicknessLines;
-    }
-
-    private static Line thicknessLineAtMiddleOfSegment(Line line, Glyph glyph) {
-        // Calculate point at the middle of the line
-        double centerX = (line.getFrom().x() + line.getTo().x()) / 2;
-        double centerY = (line.getFrom().y() + line.getTo().y()) / 2;
-        Point center = new Point(centerX, centerY);
-
+    protected Line thicknessLineAtPointOfSegment(Line line, Point p, Glyph glyph) {
         // Define a length for the perpendicular line, so that it is certainly long enough to cross the entire glyph
         double length = glyph.getBoundingBox().getHeight() + glyph.getBoundingBox().getWidth();
 
-        Line perpendicularLine = line.getPerpendicularLine(center, length);
+        Line perpendicularLine = line.getPerpendicularLine(p, length);
 
         // find nearest intersection of perpendicular line with any other segment of the glyph
         double distanceToNearestIntersection = Double.MAX_VALUE;
@@ -59,7 +35,7 @@ public class LineThicknessAnalyzer {
 
                 Point intersection = getLineLineIntersection(perpendicularLine, (Line) s);
                 if(intersection != null) {
-                    double dist = intersection.distanceTo(center);
+                    double dist = intersection.distanceTo(p);
                     if(dist < distanceToNearestIntersection) {
                         distanceToNearestIntersection = dist;
                         nearestIntersection = intersection;
@@ -72,10 +48,10 @@ public class LineThicknessAnalyzer {
             return null;
         }
 
-        return new Line(center, nearestIntersection);
+        return new Line(p, nearestIntersection);
     }
 
-    private static Point getLineLineIntersection(Line line1, Line line2) {
+    protected Point getLineLineIntersection(Line line1, Line line2) {
         // use awt lines to calculate intersection
         Line2D awtLine1 = new Line2D.Double(line1.getFrom().x(), line1.getFrom().y(), line1.getTo().x(), line1.getTo().y());
         Line2D awtLine2 = new Line2D.Double(line2.getFrom().x(), line2.getFrom().y(), line2.getTo().x(), line2.getTo().y());
