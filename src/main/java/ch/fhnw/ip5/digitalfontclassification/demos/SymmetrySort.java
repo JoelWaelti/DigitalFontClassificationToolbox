@@ -21,15 +21,15 @@ public class SymmetrySort {
         String target = args[2];
 
         char character = args[3].charAt(0);
-        float fontSize = Float.parseFloat(args[4]);
+        int unitsPerEm = Integer.parseInt(args[3]);
         double flatness = Double.parseDouble(args[5]);
 
         System.out.println(fontPath.getPath());
         for (final File fontClass : fontPath.listFiles()) {
             System.out.println(fontClass.getPath());
             for (final File file : fontClass.listFiles()) {
-                FontParser parser = new JavaAwtFontParser(file.getPath());
-                Glyph glyph = parser.getGlyph(character, fontSize);
+                FontParser parser = new ApacheFontBoxFontParser(file.getPath());
+                Glyph glyph = parser.getGlyph(character, unitsPerEm);
                 Flattener flattener = new JavaAwtFlattener(flatness);
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 

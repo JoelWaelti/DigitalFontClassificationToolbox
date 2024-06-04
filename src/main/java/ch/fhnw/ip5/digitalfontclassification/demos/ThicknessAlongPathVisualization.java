@@ -23,15 +23,15 @@ public class ThicknessAlongPathVisualization {
         String sourcePath = args[0];
         String targetPath = args[1];
         char character = args[2].charAt(0);
-        float fontSize = Float.parseFloat(args[3]);
+        int unitsPerEm = Integer.parseInt(args[3]);
         double flatness = Double.parseDouble(args[4]);
 
         PlotUtil.doForEachFontInDirectory(sourcePath, fontPath -> {
             try {
                 System.out.println(fontPath);
 
-                FontParser parser = new JavaAwtFontParser(fontPath.toString());
-                Glyph glyph = parser.getGlyph(character, fontSize);
+                FontParser parser = new ApacheFontBoxFontParser(fontPath.toString());
+                Glyph glyph = parser.getGlyph(character, unitsPerEm);
                 Flattener flattener = new JavaAwtFlattener(flatness);
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 

@@ -1,11 +1,15 @@
 package ch.fhnw.ip5.digitalfontclassification.drawing;
 
+import ch.fhnw.ip5.digitalfontclassification.domain.Contour;
+import ch.fhnw.ip5.digitalfontclassification.domain.Glyph;
 import ch.fhnw.ip5.digitalfontclassification.domain.Line;
+import ch.fhnw.ip5.digitalfontclassification.domain.Point;
+import ch.fhnw.ip5.digitalfontclassification.domain.Segment;
 
+import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
-import java.awt.*;
 import java.util.function.Supplier;
 
 public class DrawUtil {

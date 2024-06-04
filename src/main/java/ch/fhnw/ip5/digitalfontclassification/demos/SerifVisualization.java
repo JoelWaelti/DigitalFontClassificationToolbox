@@ -1,25 +1,23 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
 import ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer;
-import ch.fhnw.ip5.digitalfontclassification.domain.*;
+import ch.fhnw.ip5.digitalfontclassification.analysis.SerifExtractor;
 import ch.fhnw.ip5.digitalfontclassification.domain.Point;
+import ch.fhnw.ip5.digitalfontclassification.domain.*;
+import ch.fhnw.ip5.digitalfontclassification.drawing.DrawUtil;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static ch.fhnw.ip5.digitalfontclassification.analysis.LineThicknessAnalyzer.computeThicknessAlongPathAtMiddleOfSegments;
-
-public class FlattenedGlyphView {
+public class SerifVisualization {
 
     // Args: <source path> <target path> <character> <font size> <flatness>
     public static void main(String[] args) throws IOException {
@@ -41,7 +39,7 @@ public class FlattenedGlyphView {
                 BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph);
 
                 Path relativePath = Path.of(sourcePath).relativize(fontPath);
-                Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
+                Path plotFilePath = Path.of(targetPath, relativePath + ".png");
                 File plotFile = plotFilePath.toFile();
                 if (!Files.exists(plotFilePath.getParent())) {
                     Files.createDirectories(plotFilePath.getParent());
@@ -61,39 +59,27 @@ public class FlattenedGlyphView {
 
         g2d.setColor(Color.WHITE);
         g2d.fillRect(0,0,bi.getWidth(),bi.getHeight());
+        DrawUtil.setOriginToBottomLeft(g2d, bi.getHeight(), 100);
+        drawGlyph(glyph, g2d);
 
-        g2d.scale(1, -1);
+        g2d.setStroke(new BasicStroke(3));
+        List<Line> serifLines = SerifExtractor.getSerifLines(glyph);
+        DrawUtil.drawLines(serifLines, g2d, () -> Color.RED);
 
-        int tolerance = 100;
-        g2d.translate(0, -bi.getHeight() + tolerance);
-
-        drawContoursWithColorFlow(glyph.getContours(), g2d);
         return bi;
     }
 
-    private static void drawContoursWithColorFlow(List<Contour> contours, Graphics2D g2d) {
+    private static void drawGlyph(Glyph glyph, Graphics2D g2d) {
+        List<Contour> contours = glyph.getContours();
         for (Contour contour : contours) {
             // Draw segments connecting outline points
-            Contour rotatedContour = contour.moveStartPointToSegmentClosestTo(new Point(0,0));
-            List<Segment> segments = rotatedContour.getSegments();
-            int totalSegments = segments.size();
-
-            for (int i = 0; i < totalSegments; i++) {
-                Segment segment = segments.get(i);
-                float hue = (float) i / (totalSegments - 1);
-
-                Color color = Color.getHSBColor(hue, 1.0f, 1.0f);
-                g2d.setColor(color);
-
-                float lineThickness = 3.0f; // You can adjust the thickness here
-                g2d.setStroke(new BasicStroke(lineThickness));
-
+            g2d.setColor(Color.BLACK);
+            List<Segment> segments = contour.getSegments();
+            for (Segment segment : segments) {
                 Point from = segment.getFrom();
                 Point to = segment.getTo();
                 g2d.drawLine((int) from.x(), (int) from.y(), (int) to.x(), (int) to.y());
             }
         }
-
     }
-
 }

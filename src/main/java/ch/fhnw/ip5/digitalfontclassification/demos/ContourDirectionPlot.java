@@ -16,7 +16,7 @@ public class ContourDirectionPlot {
         String sourcePath = args[0];
         String targetPath = args[1];
         char character = args[2].charAt(0);
-        float fontSize = Float.parseFloat(args[3]);
+        int unitsPerEm = Integer.parseInt(args[3]);
         double flatness = Double.parseDouble(args[4]);
 
         PlotUtil.doForEachFontInDirectory(sourcePath, fontPath -> {
@@ -30,7 +30,7 @@ public class ContourDirectionPlot {
                     Files.createDirectories(plotFilePath.getParent());
                 }
 
-                JFreeChart chart = getChart(fontPath, character, fontSize, flatness);
+                JFreeChart chart = getChart(fontPath, character, unitsPerEm, flatness);
                 ChartUtilities.saveChartAsJPEG(plotFile, chart, 600, 800);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -38,9 +38,9 @@ public class ContourDirectionPlot {
         });
     }
 
-    public static JFreeChart getChart(Path fontPath, char character, float fontSize, double flatness) throws FontParserException {
-        FontParser parser = new JavaAwtFontParser(fontPath.toString());
-        Glyph glyph = parser.getGlyph(character, fontSize);
+    public static JFreeChart getChart(Path fontPath, char character, int unitsPerEm, double flatness) throws FontParserException {
+        FontParser parser = new ApacheFontBoxFontParser(fontPath.toString());
+        Glyph glyph = parser.getGlyph(character, unitsPerEm);
         Flattener flattener = new JavaAwtFlattener(flatness);
         Glyph flattenedGlyph = flattener.flatten(glyph);
 

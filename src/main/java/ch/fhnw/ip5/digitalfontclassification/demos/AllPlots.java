@@ -1,10 +1,6 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
-import ch.fhnw.ip5.digitalfontclassification.domain.Flattener;
-import ch.fhnw.ip5.digitalfontclassification.domain.FontParser;
-import ch.fhnw.ip5.digitalfontclassification.domain.Glyph;
-import ch.fhnw.ip5.digitalfontclassification.domain.JavaAwtFlattener;
-import ch.fhnw.ip5.digitalfontclassification.domain.JavaAwtFontParser;
+import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -124,15 +120,15 @@ public class AllPlots extends JPanel {
         String originPath = args[0];
         String targetPath = args[1];
         char character = args[2].charAt(0);
-        float fontSize = Float.parseFloat(args[3]);
+        int unitsPerEm = Integer.parseInt(args[3]);
         double flatness = Double.parseDouble(args[4]);
 
         PlotUtil.doForEachFontInDirectory(originPath, fontPath -> {
             try {
                 System.out.println(fontPath);
 
-                FontParser parser = new JavaAwtFontParser(fontPath.toString());
-                Glyph glyph = parser.getGlyph(character, fontSize);
+                FontParser parser = new ApacheFontBoxFontParser(fontPath.toString());
+                Glyph glyph = parser.getGlyph(character, unitsPerEm);
                 Flattener flattener = new JavaAwtFlattener(flatness);
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 
@@ -145,9 +141,9 @@ public class AllPlots extends JPanel {
 
                 // Generate charts
                 List<JFreeChart> charts = new ArrayList<>();
-                charts.add(ContourDirectionPlot.getChart(fontPath, character, fontSize, flatness));
-                charts.add(SlopeAlongContourPlot.getChart(fontPath, character, fontSize, flatness));
-                charts.add(ThicknessAlongPathPlot.getChart(fontPath, character, fontSize, flatness));
+                charts.add(ContourDirectionPlot.getChart(fontPath, character, unitsPerEm, flatness));
+                charts.add(SlopeAlongContourPlot.getChart(fontPath, character, unitsPerEm, flatness));
+                charts.add(ThicknessAlongPathPlot.getChart(fontPath, character, unitsPerEm, flatness));
 
                 ChartLayoutInstructions layoutInstructions = new ChartLayoutInstructions(2, 2);
                 AllPlots customChartPanel = new AllPlots(charts, layoutInstructions);

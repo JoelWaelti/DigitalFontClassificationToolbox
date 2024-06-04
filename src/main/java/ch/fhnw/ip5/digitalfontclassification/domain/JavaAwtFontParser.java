@@ -29,7 +29,7 @@ public class JavaAwtFontParser extends FontParser {
     }
 
     @Override
-    public Glyph getGlyph(char character, float fontSize) {
+    public Glyph getGlyph(char character, int fontSize) {
         Font font = defaultFont.deriveFont(fontSize);
         GlyphVector glyphVector = font.createGlyphVector(frc, new char[]{character});
         Shape glyphOutline = glyphVector.getGlyphOutline(0);
@@ -37,7 +37,7 @@ public class JavaAwtFontParser extends FontParser {
         List<Contour> contours;
         PathIterator pathIterator = glyphOutline.getPathIterator(new AffineTransform());
         try {
-            contours = buildContours(pathIterator);
+            contours = buildContours(pathIterator, 1);
         } catch(IllegalStateException e) {
             throw new IllegalArgumentException("The provided font does not have a valid format in the path description of this character.");
         }
@@ -56,5 +56,10 @@ public class JavaAwtFontParser extends FontParser {
     @Override
     public Glyph getGlyph(char c) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getUnitsPerEm() throws FontParserException {
+        return 0;
     }
 }
