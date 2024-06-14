@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ThicknessAlongPathPlot2 {
     // Args: <source> <target> <character> <fontSize> <flatness> <spacing>
@@ -43,20 +44,19 @@ public class ThicknessAlongPathPlot2 {
         });
     }
 
-    public static List<Double> getThicknesses(Glyph glyph, double spacing) {
-        List<Double> thicknesses = new EvenlyDistributedThicknessAnalyzer(spacing).computeThicknesses(glyph);
+    public static double[] getThicknesses(Glyph glyph, double spacing) {
+        List<Line> lines = new EvenlyDistributedThicknessAnalyzer(spacing).computeThicknessLines(glyph);
 
-        // shift thicknesses to start with the segment closest to point (0,0)
+        // shift thicknesses to start with the line closest to point (0,0)
         Point origin = new Point(0,0);
-        List<Segment> segments = glyph.getContours().getFirst().getSegments();
-        Segment closestSegment = Collections.min(
-                segments,
+        Line closestLine = Collections.min(
+                lines,
                 (s1, s2) -> (int) (s1.getFrom().distanceTo(origin) - s2.getFrom().distanceTo(origin))
         );
-        int closestSegmentIndex = segments.indexOf(closestSegment);
-        Collections.rotate(thicknesses, -closestSegmentIndex);
+        int closestLineIndex = lines.indexOf(closestLine);
+        Collections.rotate(lines, -closestLineIndex);
 
-        return thicknesses;
+        return lines.stream().mapToDouble(Line::getLength).toArray();
     }
 
     public static JFreeChart getChart(Path fontPath, char character, float fontSize, double flatness, double spacing) throws FontParserException {
@@ -64,7 +64,7 @@ public class ThicknessAlongPathPlot2 {
         Glyph glyph = parser.getGlyph(character, fontSize);
         Flattener flattener = new JavaAwtFlattener(flatness);
         Glyph flattenedGlyph = flattener.flatten(glyph);
-        List<Double> thicknesses = getThicknesses(flattenedGlyph, spacing);
+        double[] thicknesses = getThicknesses(flattenedGlyph, spacing);
 
         return PlotUtil.getBarChart(
                 parser.getFontName() + ": " + character,

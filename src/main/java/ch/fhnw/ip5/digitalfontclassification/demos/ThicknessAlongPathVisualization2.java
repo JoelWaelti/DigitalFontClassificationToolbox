@@ -89,13 +89,12 @@ public class ThicknessAlongPathVisualization2 {
         int totalLines = lines.size();
 
         Point origin = new Point(0,0);
-        List<Segment> segments = glyph.getContours().getFirst().getSegments();
-        Segment closestSegment = Collections.min(
-            segments,
+        Line closestLine = Collections.min(
+            lines,
             (s1, s2) -> (int) (s1.getFrom().distanceTo(origin) - s2.getFrom().distanceTo(origin))
         );
-        int closestSegmentIndex = segments.indexOf(closestSegment);
-        Collections.rotate(lines, -closestSegmentIndex);
+        int closestLineIndex = lines.indexOf(closestLine);
+        Collections.rotate(lines, -closestLineIndex);
 
         for (int i = 0; i < totalLines; i++) {
             Line line = lines.get(i);
