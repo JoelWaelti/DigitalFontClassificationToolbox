@@ -53,7 +53,7 @@ public class ThicknessAlongPathVisualization2 {
         });
     }
 
-    private static BufferedImage getVisualizationAsBufferedImage(Glyph glyph, double spacing) {
+    static BufferedImage getVisualizationAsBufferedImage(Glyph glyph, double spacing) {
         BufferedImage bi = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = bi.createGraphics();
 
