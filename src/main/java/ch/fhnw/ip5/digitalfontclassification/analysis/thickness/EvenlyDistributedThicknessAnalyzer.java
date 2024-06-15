@@ -4,9 +4,16 @@ import ch.fhnw.ip5.digitalfontclassification.domain.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 
 public class EvenlyDistributedThicknessAnalyzer extends ThicknessAnalyzer {
     private double spacing;
+
+    public EvenlyDistributedThicknessAnalyzer(double spacing, ThicknessLineFilter<Line, Line, Line> filter) {
+        super(filter);
+        this.spacing = spacing;
+    }
 
     public EvenlyDistributedThicknessAnalyzer(double spacing) {
         this.spacing = spacing;
@@ -23,7 +30,6 @@ public class EvenlyDistributedThicknessAnalyzer extends ThicknessAnalyzer {
     @Override
     public List<Line> computeThicknessLines(Glyph glyph) {
         ArrayList<Line> thicknessLines = new ArrayList<>();
-
         // It's assumed that this first contour is the main enclosing contour of the glyph
         Contour contour = glyph.getContours().getFirst();
 

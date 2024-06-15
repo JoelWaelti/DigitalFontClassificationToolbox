@@ -12,7 +12,7 @@ import java.util.List;
 
 public class SymmetryAnalyzer {
     public static double[] getHaarstrichRange(Glyph glyph) {
-        List<Double> thicknesses =  new MiddleOfLineThicknessAnalyzer().computeThicknesses(glyph);
+        List<Double> thicknesses =  new MiddleOfLineThicknessAnalyzer().computeThicknessesAsList(glyph);
 
         Point origin = new Point(0,0);
         List<Segment> segments = glyph.getContours().getFirst().getSegments();

@@ -1,8 +1,6 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
-import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.EvenlyDistributedThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.MiddleOfLineThicknessAnalyzer;
-import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.ThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 import org.jfree.chart.ChartUtilities;
@@ -45,7 +43,7 @@ public class ThicknessAlongPathPlot {
     }
 
     public static List<Double> getThicknesses(Glyph glyph) {
-        List<Double> thicknesses = new MiddleOfLineThicknessAnalyzer().computeThicknesses(glyph);
+        List<Double> thicknesses = new MiddleOfLineThicknessAnalyzer().computeThicknessesAsList(glyph);
 
         // shift thicknesses to start with the segment closest to point (0,0)
         Point origin = new Point(0,0);
