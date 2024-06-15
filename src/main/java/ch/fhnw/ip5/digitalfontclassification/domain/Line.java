@@ -51,4 +51,23 @@ public class Line extends Segment {
     public Vector toVector() {
         return new Vector(getTo().x() - getFrom().x(), getTo().y() - getFrom().y());
     }
+
+    public double angleTo(Line line) {
+        Vector vecThicknessLine = this.toVector();
+        Vector vecIntersectingLine = line.toVector();
+
+        double dotProduct = vecThicknessLine.dot(vecIntersectingLine);
+        double magThicknessLine = vecThicknessLine.magnitude();
+        double magIntersectingLine = vecIntersectingLine.magnitude();
+
+        double cosTheta = dotProduct / (magThicknessLine * magIntersectingLine);
+
+        // Ensure the value is within the valid range for acos
+        cosTheta = Math.max(-1.0, Math.min(1.0, cosTheta));
+
+        double angleRadians = Math.acos(cosTheta);
+        double angleDegrees = Math.toDegrees(angleRadians);
+
+        return Math.abs(angleDegrees);
+    }
 }
