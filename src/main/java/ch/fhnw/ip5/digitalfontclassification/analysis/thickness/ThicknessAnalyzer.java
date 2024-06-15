@@ -7,11 +7,29 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class ThicknessAnalyzer {
+    private ThicknessLineFilter<Line, Line, Line> filter = null;
+
+    ThicknessAnalyzer() {}
+
+    ThicknessAnalyzer(ThicknessLineFilter<Line, Line, Line> filter) {
+        this.filter = filter;
+    }
+
+    @FunctionalInterface
+    public interface ThicknessLineFilter<Segment, Line1, Line2> {
+        boolean apply(Segment t, Line1 u, Line2 v);
+    }
+
     public abstract List<Line> computeThicknessLines(Glyph glyph);
 
-    public List<Double> computeThicknesses(Glyph glyph) {
+    public List<Double> computeThicknessesAsList(Glyph glyph) {
         return computeThicknessLines(glyph).stream()
                 .map(Line::getLength).collect(Collectors.toList());
+    }
+
+    public double[] computeThicknesses(Glyph glyph) {
+        return computeThicknessLines(glyph).stream()
+                .mapToDouble(Line::getLength).toArray();
     }
 
     protected Line thicknessLineAtPointOfSegment(Line line, Point p, Glyph glyph) {
@@ -23,22 +41,24 @@ public abstract class ThicknessAnalyzer {
         // find nearest intersection of perpendicular line with any other segment of the glyph
         double distanceToNearestIntersection = Double.MAX_VALUE;
         Point nearestIntersection = null;
+        Line intersectingLine = null;
         for(Contour contour : glyph.getContours()) {
             for(Segment s : contour.getSegments()) {
                 if(s == line) {
                     continue;
                 }
 
-                if(!(s instanceof Line)) {
+                if(!(s instanceof Line possiblyIntersectingLine)) {
                     throw new IllegalArgumentException("Contours of the glyph can only contain lines for this operation. Consider flattening the entire glyph.");
                 }
 
-                Point intersection = getLineLineIntersection(perpendicularLine, (Line) s);
+                Point intersection = getLineLineIntersection(perpendicularLine, possiblyIntersectingLine);
                 if(intersection != null) {
                     double dist = intersection.distanceTo(p);
                     if(dist < distanceToNearestIntersection) {
                         distanceToNearestIntersection = dist;
                         nearestIntersection = intersection;
+                        intersectingLine = possiblyIntersectingLine;
                     }
                 }
             }
@@ -48,7 +68,13 @@ public abstract class ThicknessAnalyzer {
             return null;
         }
 
-        return new Line(p, nearestIntersection);
+        Line thicknessLine = new Line(p, nearestIntersection);
+
+        if(filter != null && !filter.apply(line, intersectingLine, thicknessLine)) {
+            return null;
+        }
+
+        return thicknessLine;
     }
 
     protected Point getLineLineIntersection(Line line1, Line line2) {
