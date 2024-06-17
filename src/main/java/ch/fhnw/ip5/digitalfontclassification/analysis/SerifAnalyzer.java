@@ -2,8 +2,8 @@ package ch.fhnw.ip5.digitalfontclassification.analysis;
 
 import ch.fhnw.ip5.digitalfontclassification.domain.Line;
 import ch.fhnw.ip5.digitalfontclassification.domain.Point;
-import ch.fhnw.ip5.digitalfontclassification.domain.Vector;
 
+import ch.fhnw.ip5.digitalfontclassification.domain.Segment;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,7 +16,7 @@ public class SerifAnalyzer {
         double deltaX = Math.abs(to.x() - from.x());
         double deltaY = Math.abs(to.y() - from.y());
 
-        return deltaX >= deltaY * 1;
+        return deltaX >= deltaY;
     }
 
     private static boolean isVerticalish(Line line) {
@@ -49,7 +49,7 @@ public class SerifAnalyzer {
             .collect(Collectors.toList());
     }
 
-    public static boolean getEndOfLine(Line line, double width, double height) {
+    public static boolean getEndOfLine(Segment line, double width, double height) {
         Point start = line.getFrom();
 
         if(start.x() >= width/2 && start.y() >= height - height/4) return true;
