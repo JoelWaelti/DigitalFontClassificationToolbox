@@ -66,8 +66,8 @@ public class Line extends Segment {
         cosTheta = Math.max(-1.0, Math.min(1.0, cosTheta));
 
         double angleRadians = Math.acos(cosTheta);
-        double angleDegrees = Math.toDegrees(angleRadians);
+        double angleDegrees = Math.abs(Math.toDegrees(angleRadians));
 
-        return Math.abs(angleDegrees);
+        return Math.min(angleDegrees, 180 - angleDegrees);
     }
 }
