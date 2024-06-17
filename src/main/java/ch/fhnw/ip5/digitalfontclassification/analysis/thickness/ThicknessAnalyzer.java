@@ -3,6 +3,7 @@ package ch.fhnw.ip5.digitalfontclassification.analysis.thickness;
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
 
 import java.awt.geom.Line2D;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,7 +21,20 @@ public abstract class ThicknessAnalyzer {
         boolean apply(Segment t, Line1 u, Line2 v);
     }
 
-    public abstract List<Line> computeThicknessLines(Glyph glyph);
+    public abstract List<Line> computeThicknessLines(List<Line> linesToGetThicknessLinesOf, List<Line> allLines);
+
+    public List<Line> computeThicknessLines(Glyph glyph) {
+        // It's assumed that this first contour is the main enclosing contour of the glyph
+        List<Line> linesToGetThicknessLinesOf = glyph.getContours()
+                .getFirst()
+                .getSegments()
+                .stream()
+                .map(s -> (Line)s)
+                .toList();
+        List<Line> allGlyphLines = getAllLinesFromGlyph(glyph);
+
+        return computeThicknessLines(linesToGetThicknessLinesOf, allGlyphLines);
+    }
 
     public List<Double> computeThicknessesAsList(Glyph glyph) {
         return computeThicknessLines(glyph).stream()
@@ -32,9 +46,25 @@ public abstract class ThicknessAnalyzer {
                 .mapToDouble(Line::getLength).toArray();
     }
 
-    protected Line thicknessLineAtPointOfSegment(Line line, Point p, Glyph glyph) {
-        // Define a length for the perpendicular line, so that it is certainly long enough to cross the entire glyph
-        double length = glyph.getBoundingBox().getHeight() + glyph.getBoundingBox().getWidth();
+    protected List<Line> getAllLinesFromGlyph(Glyph glyph) {
+        List<Line> linesOfGlyph = new ArrayList<>();
+
+        for (Contour contour : glyph.getContours()) {
+            for (Segment segment : contour.getSegments()) {
+                if (segment instanceof Line) {
+                    linesOfGlyph.add((Line) segment);
+                } else {
+                    throw new ClassCastException("Glyph can only contain lines");
+                }
+            }
+        }
+
+        return linesOfGlyph;
+    }
+
+    protected Line thicknessLineAtPointOfLine(Line line, Point p, List<Line> otherLines) {
+        // Define a length for the perpendicular line, so that it is certainly long enough to cross the entire shape
+        double length = Integer.MAX_VALUE;
 
         Line perpendicularLine = line.getPerpendicularLine(p, length);
 
@@ -42,24 +72,18 @@ public abstract class ThicknessAnalyzer {
         double distanceToNearestIntersection = Double.MAX_VALUE;
         Point nearestIntersection = null;
         Line intersectingLine = null;
-        for(Contour contour : glyph.getContours()) {
-            for(Segment s : contour.getSegments()) {
-                if(s == line) {
-                    continue;
-                }
+        for(Line possiblyIntersectingLine : otherLines) {
+            if(possiblyIntersectingLine == line) {
+                continue;
+            }
 
-                if(!(s instanceof Line possiblyIntersectingLine)) {
-                    throw new IllegalArgumentException("Contours of the glyph can only contain lines for this operation. Consider flattening the entire glyph.");
-                }
-
-                Point intersection = getLineLineIntersection(perpendicularLine, possiblyIntersectingLine);
-                if(intersection != null) {
-                    double dist = intersection.distanceTo(p);
-                    if(dist < distanceToNearestIntersection) {
-                        distanceToNearestIntersection = dist;
-                        nearestIntersection = intersection;
-                        intersectingLine = possiblyIntersectingLine;
-                    }
+            Point intersection = getLineLineIntersection(perpendicularLine, possiblyIntersectingLine);
+            if(intersection != null) {
+                double dist = intersection.distanceTo(p);
+                if(dist < distanceToNearestIntersection) {
+                    distanceToNearestIntersection = dist;
+                    nearestIntersection = intersection;
+                    intersectingLine = possiblyIntersectingLine;
                 }
             }
         }
