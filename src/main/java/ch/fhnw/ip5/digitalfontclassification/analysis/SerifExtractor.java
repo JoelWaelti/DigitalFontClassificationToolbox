@@ -118,9 +118,6 @@ public class SerifExtractor {
 
     private int findIndexOfEndOfSerif(int startIndex, StopDirection stopDirection, boolean forward) {
         double distanceWalked = 0;
-        /*int index = forward ? startIndex : startIndex - 1;
-        int step = forward ? 1 : -1;
-        int endIndex = forward ? startIndex + directions.length : startIndex;*/
         int index = forward ? 0 : directions.length - 1;
         int step = forward ? 1 : -1;
         int endIndex = forward ? directions.length : -1;
@@ -153,59 +150,6 @@ public class SerifExtractor {
             }
         }
         return closestLineIndex;
-    }
-
-    public static List<Line> getSerifLines(Glyph glyph) {
-        Contour contour = glyph.getContours().getFirst();
-        contour = contour.moveStartPointToSegmentClosestTo(new Point(0,0));
-        Line[] lines = new Line[contour.getSegments().size()];
-        int i = 0;
-        for(Segment s : contour.getSegments()) {
-            lines[i] = (Line) s;
-            i++;
-        }
-
-        double[] directions = ContourDirectionAnalyzer.getDirectionsAlongContour(contour);
-        double distanceWalkedUpwards = 0;
-        int serifEndIndex = 0;
-
-        for(int j = 0; j < directions.length; j++) {
-            if(directions[j] > 45 && directions[j] < 135) {
-                distanceWalkedUpwards += lines[j].getLength();
-
-                if(distanceWalkedUpwards > glyph.getBoundingBox().getHeight() * THRESHOLD) {
-                    break;
-                }
-            } else {
-                distanceWalkedUpwards = 0;
-            }
-
-            serifEndIndex = j;
-        }
-
-        double distanceWalkedDownwards = 0;
-        int serifStartIndex = directions.length;
-
-        for(int j = directions.length - 1; j >= 0; j--) {
-            if(directions[j] > 225 && directions[j] < 315) {
-                distanceWalkedDownwards += lines[j].getLength();
-
-                if(distanceWalkedDownwards > glyph.getBoundingBox().getHeight() * THRESHOLD) {
-                    break;
-                }
-            } else {
-                distanceWalkedDownwards = 0;
-            }
-            serifStartIndex = j;
-        }
-
-        List<Line> serifLines = new ArrayList<>();
-        int serifLineCount = lines.length - serifStartIndex + serifEndIndex + 1;
-        for(int j = 0; j < serifLineCount; j++) {
-            serifLines.add(lines[(serifStartIndex + j) % lines.length]);
-        }
-
-        return serifLines;
     }
 
     public enum SerifLocation {
