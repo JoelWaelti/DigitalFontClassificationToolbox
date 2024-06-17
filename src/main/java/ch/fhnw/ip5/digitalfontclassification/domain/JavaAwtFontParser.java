@@ -34,8 +34,12 @@ public class JavaAwtFontParser extends FontParser {
         GlyphVector glyphVector = font.createGlyphVector(frc, new char[]{character});
         Shape glyphOutline = glyphVector.getGlyphOutline(0);
 
+        // mirror the path on the x-axis
+        AffineTransform mirrorTransform = AffineTransform.getScaleInstance(1, -1);
+        glyphOutline = mirrorTransform.createTransformedShape(glyphOutline);
+
         List<Contour> contours;
-        PathIterator pathIterator = glyphOutline.getPathIterator(new AffineTransform());
+        PathIterator pathIterator = glyphOutline.getPathIterator(null);
         try {
             contours = buildContours(pathIterator);
         } catch(IllegalStateException e) {

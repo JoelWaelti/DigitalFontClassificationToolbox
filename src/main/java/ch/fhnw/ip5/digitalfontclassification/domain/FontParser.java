@@ -1,5 +1,6 @@
 package ch.fhnw.ip5.digitalfontclassification.domain;
 
+import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,17 +23,17 @@ public abstract class FontParser {
                     contours.add(builder.build());
                     builder = Contour.builder();
                 }
-                Point to = new Point(coords[0], -coords[1]);
+                Point to = new Point(coords[0], coords[1]);
                 builder.startAt(to);
             } else if (type == PathIterator.SEG_LINETO) {
-                Point to = new Point(coords[0], -coords[1]);
+                Point to = new Point(coords[0], coords[1]);
                 builder.lineTo(to);
             } else if (type == PathIterator.SEG_CUBICTO) {
                 // The final coords in a CUBICTO are the actual new outline point.
                 // The first two pairs are control points.
-                Point control1 = new Point(coords[0], -coords[1]);
-                Point control2 = new Point(coords[2], -coords[3]);
-                Point to = new Point(coords[4], -coords[5]);
+                Point control1 = new Point(coords[0], coords[1]);
+                Point control2 = new Point(coords[2], coords[3]);
+                Point to = new Point(coords[4], coords[5]);
                 builder.cubicTo(control1, control2, to);
             } else if (type == PathIterator.SEG_QUADTO) {
                 throw new UnsupportedOperationException("Only OTF-Fonts with cubic bezier curves are supported.");
