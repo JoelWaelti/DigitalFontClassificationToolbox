@@ -79,6 +79,8 @@ public class SerifExtractor {
     private List<Line> getLinesOfSerifByStartAndEndIndex(int startIndex, int endIndex) {
         List<Line> serifLines = new ArrayList<>();
         int index = startIndex;
+        // make endIndex inclusive
+        endIndex = (endIndex + 1) % lines.length;
         while(index != endIndex) {
             serifLines.add(lines[index]);
             index = (index + 1) % lines.length;
