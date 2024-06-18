@@ -101,6 +101,45 @@ public abstract class ThicknessAnalyzer {
         return thicknessLine;
     }
 
+    protected Line horizontalLineAtPointOfLine(Line line, Point p, List<Line> otherLines) {
+        // Define a length for the horizontal line, so that it is certainly long enough to cross the entire shape
+        double length = Integer.MAX_VALUE;
+
+        Line horizontalLine = line.getHorizontalLine(p, length);
+
+        // find nearest intersection of horizontal line with any other segment of the glyph
+        double distanceToNearestIntersection = Double.MAX_VALUE;
+        Point nearestIntersection = null;
+        Line intersectingLine = null;
+        for(Line possiblyIntersectingLine : otherLines) {
+            if(possiblyIntersectingLine == line) {
+                continue;
+            }
+
+            Point intersection = getLineLineIntersection(horizontalLine, possiblyIntersectingLine);
+            if(intersection != null) {
+                double dist = intersection.distanceTo(p);
+                if(dist < distanceToNearestIntersection) {
+                    distanceToNearestIntersection = dist;
+                    nearestIntersection = intersection;
+                    intersectingLine = possiblyIntersectingLine;
+                }
+            }
+        }
+
+        if(nearestIntersection == null) {
+            return null;
+        }
+
+        Line horizontalThicknessLine = new Line(p, nearestIntersection);
+
+        if(filter != null && !filter.apply(line, intersectingLine, horizontalThicknessLine)) {
+            return null;
+        }
+
+        return horizontalThicknessLine ;
+    }
+
     protected Point getLineLineIntersection(Line line1, Line line2) {
         // use awt lines to calculate intersection
         Line2D awtLine1 = new Line2D.Double(line1.getFrom().x(), line1.getFrom().y(), line1.getTo().x(), line1.getTo().y());
@@ -126,6 +165,8 @@ public abstract class ThicknessAnalyzer {
 
             return new Point(intersectX, intersectY);
         }
+
+
         return null;
     }
 }

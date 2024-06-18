@@ -47,4 +47,24 @@ public class EvenlyDistributedThicknessAnalyzer extends ThicknessAnalyzer {
 
         return thicknessLines;
     }
+
+    public List<Line> computeHorizontalLines(List<Line> linesToGetThicknessLinesOf, List<Line> allLines) {
+        ArrayList<Line> horizontalLines = new ArrayList<>();
+        double distanceLeft = 0;
+        for(Line line : linesToGetThicknessLinesOf) {
+            double lineLength = line.getLength();
+            while (distanceLeft <= lineLength) {
+                Point p = line.interpolate(distanceLeft / lineLength);
+                distanceLeft += spacing;
+
+                Line horizontalLine = horizontalLineAtPointOfLine(line, p, allLines);
+                if(horizontalLine != null) {
+                    horizontalLines.add(horizontalLine);
+                }
+            }
+            distanceLeft -= lineLength;
+        }
+
+        return horizontalLines;
+    }
 }

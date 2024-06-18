@@ -23,7 +23,7 @@ public class ContourDirectionAnalyzer {
     }
 
     // calculates the counter-clockwise angle of the vector to the x-axis
-    private static double ccwAngleWithXAxis(Vector v) {
+    public static double ccwAngleWithXAxis(Vector v) {
         double angleRad = Math.atan2(v.y(), v.x());
         // Adjust angle to be in the range [0, 2π)
         if (angleRad < 0) {

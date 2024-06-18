@@ -1,23 +1,17 @@
 package ch.fhnw.ip5.digitalfontclassification.analysis;
 
+import ch.fhnw.ip5.digitalfontclassification.domain.Glyph;
 import ch.fhnw.ip5.digitalfontclassification.domain.Line;
 import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 
 import ch.fhnw.ip5.digitalfontclassification.domain.Segment;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SerifAnalyzer {
-
-    public static boolean isHorizontalish(Line line) {
-        Point from = line.getFrom();
-        Point to = line.getTo();
-
-        double deltaX = Math.abs(to.x() - from.x());
-        double deltaY = Math.abs(to.y() - from.y());
-
-        return deltaX >= deltaY;
-    }
 
     private static boolean isVerticalish(Line line) {
         Point from = line.getFrom();
@@ -26,37 +20,27 @@ public class SerifAnalyzer {
         double deltaX = Math.abs(to.x() - from.x());
         double deltaY = Math.abs(to.y() - from.y());
 
-        return deltaY >= deltaX;
+        return deltaY > deltaX;
+    }
+    public static List<Line> getVerticalLines(List<Line> lines) {
+        return lines.stream()
+            .filter(SerifAnalyzer::isVerticalish)
+            .collect(Collectors.toList());
     }
 
-    public static double[] getShortHorizontalEndOfLineThicknesses(List<Line> lines, double width, double height) {
-        // Filter horizontal lines using isHorizontalish and lines < width / 2
-        return lines.stream()
-            .filter(line -> isHorizontalish(line) && line.getLength() < width / 2 && getEndOfLine(line, width, height))
+    public static boolean hasSerif(List<Line> horizontalLines, List<Line> stammLinesHorizontal, List<Line> serifLines) {
+        List<Line> verticalThicknesses = getVerticalLines(serifLines);
+
+        double maxHorizontalThicknesses = horizontalLines.stream()
             .mapToDouble(Line::getLength)
-            .toArray();
+            .max().orElse(Double.MIN_VALUE);
+
+        double stammThickness = stammLinesHorizontal.stream()
+            .mapToDouble(Line::getLength)
+            .average().orElse(Double.MIN_VALUE);
+
+        double range = maxHorizontalThicknesses - stammThickness;
+
+        return range > 1.0 && !verticalThicknesses.isEmpty();
     }
-
-    public static List<Line> getShortHorizontalEndOfLines(List<Line> lines, double width, double height) {
-        return lines.stream()
-            .filter(line -> isHorizontalish(line) && line.getLength() < width / 2 && getEndOfLine(line, width, height))
-            .collect(Collectors.toList());
-    }
-
-    public static List<Line> getShortVerticalEndOfLines(List<Line> lines, double width, double height) {
-        return lines.stream()
-            .filter(line -> isVerticalish(line) && line.getLength() < width / 4 && getEndOfLine(line, width, height))
-            .collect(Collectors.toList());
-    }
-
-    public static boolean getEndOfLine(Segment line, double width, double height) {
-        Point start = line.getFrom();
-
-        if(start.x() >= width/2 && start.y() >= height - height/4) return true;
-        else if (start.x() >= width/2 && height/4 >= start.y()) return true;
-        else if (width/2 >= start.x() && start.y() >= height - height/4) return true;
-        else if (width/2 >= start.x() && height/4 >= start.y()) return true;
-        else return false;
-    }
-
 }

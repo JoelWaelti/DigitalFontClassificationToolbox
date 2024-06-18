@@ -1,5 +1,7 @@
 package ch.fhnw.ip5.digitalfontclassification.domain;
 
+import static ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer.ccwAngleWithXAxis;
+
 public class Line extends Segment {
 
     private double length = -1;
@@ -33,6 +35,18 @@ public class Line extends Segment {
 
         return new Line(from, to);
     }
+
+    public Line getHorizontalLine(Point from, double length) {
+        double ccangle = ccwAngleWithXAxis(this.toVector());
+        Point to = null;
+
+        if(ccangle > 180) {
+            to = new Point(from.x() + length, from.y());
+        } else  to = new Point(from.x() - length, from.y());
+
+        return new Line(from, to);
+    }
+
 
     public Point interpolate(double t) {
         double x = this.getFrom().x() + t * (this.getTo().x() - this.getFrom().x());
@@ -69,5 +83,8 @@ public class Line extends Segment {
         double angleDegrees = Math.abs(Math.toDegrees(angleRadians));
 
         return Math.min(angleDegrees, 180 - angleDegrees);
+    }
+    public boolean isHorizontal() {
+        return getFrom().y() == getTo().y();
     }
 }
