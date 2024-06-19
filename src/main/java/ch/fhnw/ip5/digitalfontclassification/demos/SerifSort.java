@@ -55,22 +55,49 @@ public class SerifSort {
                     SerifExtractor serifExtractor = new SerifExtractor(flattenedGlyph, 0.2);
                     List<List<Line>> serifs = serifExtractor.getAllSerifs();
 
-                    ThicknessAnalyzer.ThicknessLineFilter<Line, Line, Line> filter = (line, intersectingLine, thicknessLine) -> {
+                    List<List<Line>> serifsBottom = new ArrayList<>();
+                    List<Line>  bottomLeft = serifExtractor.getSerifAt(SerifExtractor.SerifLocation.BOTTOM_LEFT);
+                    List<Line>  bottomRight = serifExtractor.getSerifAt(SerifExtractor.SerifLocation.BOTTOM_RIGHT);
+                    serifsBottom.add(bottomLeft);
+                    serifsBottom.add(bottomRight);
+
+                    List<List<Line>> serifsTop = new ArrayList<>();
+                    List<Line>  topRight = serifExtractor.getSerifAt(SerifExtractor.SerifLocation.TOP_RIGHT);
+                    List<Line>  topLeft = serifExtractor.getSerifAt(SerifExtractor.SerifLocation.TOP_LEFT);
+                    serifsTop.add(topLeft);
+                    serifsTop.add(topRight);
+
+                    ThicknessAnalyzer.ThicknessLineFilter<Line, Line, Line> filterBottom = (line, intersectingLine, thicknessLine) -> {
                         double ccangleLine = ccwAngleWithXAxis(line.toVector());
                         double angle = thicknessLine.angleTo(intersectingLine);
                         return angle > 45 && (ccangleLine >= 90 && 270 >= ccangleLine);
                     };
 
+                    ThicknessAnalyzer.ThicknessLineFilter<Line, Line, Line> filterTop = (line, intersectingLine, thicknessLine) -> {
+                        double ccangleLine = ccwAngleWithXAxis(line.toVector());
+                        double angle = thicknessLine.angleTo(intersectingLine);
+                        return angle > 45 && !(ccangleLine >= 90 && 270 >= ccangleLine);
+                    };
+
+
                     List<Line> serifLines = new ArrayList<>();
                     List<Line> stammlinesHorizontal = new ArrayList<>();
                     List<Line> seriflinesHorizontal = new ArrayList<>();
-                    for(List<Line> serif : serifs) {
 
-                        List<Line> thicknessLinesOfSerif = new EvenlyDistributedThicknessAnalyzer(spacing, filter).computeThicknessLines(serif, serif);
+                    for(List<Line> serif : serifs) {
+                        List<Line> thicknessLinesOfSerif = new ArrayList<>();
+
+                        if(serifsBottom.contains(serif)) {
+                            thicknessLinesOfSerif = new EvenlyDistributedThicknessAnalyzer(spacing, filterBottom).computeThicknessLines(serif, serif);
+                        }
+
+                        if(serifsTop.contains(serif)) {
+                            thicknessLinesOfSerif = new EvenlyDistributedThicknessAnalyzer(spacing, filterTop).computeThicknessLines(serif, serif);
+                        }
 
                         serifLines.addAll(thicknessLinesOfSerif);
 
-                        if(serif.size() >= 4) {
+                        if(serif.size() > 2) {
                             List<Line> stamm = new ArrayList<>();
                             List<Line> partOfSerif = new ArrayList<>();
 
@@ -80,7 +107,7 @@ public class SerifSort {
                             }
                             stamm.add(serif.get(serif.size() - 1));
 
-                            List<Line> thicknessLinesOfStamm = new EvenlyDistributedThicknessAnalyzer(spacing, filter).computeHorizontalLines(stamm, stamm);
+                            List<Line> thicknessLinesOfStamm = new EvenlyDistributedThicknessAnalyzer(spacing).computeHorizontalLines(stamm, stamm);
                             List<Line> horizontalLinesOfSerif = new MiddleOfLineThicknessAnalyzer().computeHorizontalLines(partOfSerif, serif);
 
                             seriflinesHorizontal.addAll(horizontalLinesOfSerif);
@@ -92,6 +119,7 @@ public class SerifSort {
                     List<Line> linesToDraw = new ArrayList<>();
                     linesToDraw.addAll(verticalThicknesses);
                     linesToDraw.addAll(seriflinesHorizontal);
+                    linesToDraw.addAll(stammlinesHorizontal);
 
                     BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph, linesToDraw);
 
