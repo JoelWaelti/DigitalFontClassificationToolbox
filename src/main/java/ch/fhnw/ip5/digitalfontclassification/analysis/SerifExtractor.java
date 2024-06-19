@@ -2,18 +2,8 @@ package ch.fhnw.ip5.digitalfontclassification.analysis;
 
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import ch.fhnw.ip5.digitalfontclassification.domain.Point;
-import ch.fhnw.ip5.digitalfontclassification.drawing.DrawUtil;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class SerifExtractor {
     private final Glyph glyph;
@@ -40,6 +30,56 @@ public class SerifExtractor {
         this.directions = ContourDirectionAnalyzer.getDirectionsAlongContour(contour);
     }
 
+    public List<Line> getSerifAt(SerifLocation location) {
+        BoundingBox bb = glyph.getBoundingBox();
+
+        Point startPoint = null;
+        boolean fromBottom = true;
+        if(location == SerifLocation.BOTTOM_LEFT) {
+            startPoint = new Point(0,0);
+        } else if(location == SerifLocation.BOTTOM_RIGHT) {
+            startPoint = new Point(bb.getMaxX(), 0);
+        } else if (location == SerifLocation.TOP_LEFT) {
+            startPoint = new Point(0, bb.getMaxY());
+            fromBottom = false;
+        } else if(location == SerifLocation.TOP_RIGHT) {
+            startPoint = new Point(bb.getMaxX(), bb.getMaxY());
+            fromBottom = false;
+        }
+
+        int startAtIndex = findIndexOfLineClosestToPoint(startPoint);
+        int endIndex = walkPathUntilThreshold(startAtIndex, true, fromBottom);
+        int startIndex = walkPathUntilThreshold(startAtIndex, false, fromBottom);
+
+        return getLinesOfSerifByStartAndEndIndex(startIndex, endIndex);
+    }
+
+    private int walkPathUntilThreshold(int startIndex, boolean forward, boolean fromBottom) {
+        BoundingBox bb = glyph.getBoundingBox();
+        double threshold;
+        if(fromBottom) {
+            threshold = bb.getHeight() * serifHeightThreshold;
+        } else {
+            threshold = bb.getHeight() - (serifHeightThreshold * bb.getHeight());
+        }
+
+        int index = forward ? 0 : directions.length - 1;
+        int step = forward ? 1 : -1;
+        int endIndex = forward ? directions.length : -1;
+
+        int correctedIndex = -1;
+        while (index != endIndex) {
+            correctedIndex = (startIndex + index) % directions.length;
+            double y = forward ? lines[correctedIndex].getTo().y() : lines[correctedIndex].getFrom().y();
+            if((fromBottom && y > threshold) || (!fromBottom && y < threshold)) {
+                break;
+            }
+            index += step;
+        }
+
+        return correctedIndex;
+    }
+
     public List<List<Line>> getAllSerifs() {
         return new ArrayList<>() {{
             add(getSerifAt(SerifLocation.BOTTOM_LEFT));
@@ -47,33 +87,6 @@ public class SerifExtractor {
             add(getSerifAt(SerifLocation.TOP_LEFT));
             add(getSerifAt(SerifLocation.TOP_RIGHT));
         }};
-    }
-
-    public List<Line> getSerifAt(SerifLocation location) {
-        BoundingBox bb = glyph.getBoundingBox();
-
-        Point startPoint = null;
-        StopDirection forwardsStopDirection = StopDirection.WHEN_GOING_UP;
-        StopDirection backwardsStopDirection = StopDirection.WHEN_GOING_DOWN;
-        if(location == SerifLocation.BOTTOM_LEFT) {
-            startPoint = new Point(0,0);
-        } else if(location == SerifLocation.BOTTOM_RIGHT) {
-            startPoint = new Point(bb.getMaxX(), 0);
-        } else if (location == SerifLocation.TOP_LEFT) {
-            startPoint = new Point(0, bb.getMaxY());
-            forwardsStopDirection = StopDirection.WHEN_GOING_DOWN;
-            backwardsStopDirection = StopDirection.WHEN_GOING_UP;
-        } else if(location == SerifLocation.TOP_RIGHT) {
-            startPoint = new Point(bb.getMaxX(), bb.getMaxY());
-            forwardsStopDirection = StopDirection.WHEN_GOING_DOWN;
-            backwardsStopDirection = StopDirection.WHEN_GOING_UP;
-        }
-
-        int startIndex = findIndexOfLineClosestToPoint(startPoint);
-        int serifEndIndex = findIndexOfEndOfSerif(startIndex, forwardsStopDirection, true);
-        int serifStartIndex = findIndexOfEndOfSerif(startIndex, backwardsStopDirection, false);
-
-        return getLinesOfSerifByStartAndEndIndex(serifStartIndex, serifEndIndex);
     }
 
     private List<Line> getLinesOfSerifByStartAndEndIndex(int startIndex, int endIndex) {
@@ -86,29 +99,6 @@ public class SerifExtractor {
             index = (index + 1) % lines.length;
         }
         return serifLines;
-    }
-
-    private int findIndexOfEndOfSerif(int startIndex, StopDirection stopDirection, boolean forward) {
-        double distanceWalked = 0;
-        int index = forward ? 0 : directions.length - 1;
-        int step = forward ? 1 : -1;
-        int endIndex = forward ? directions.length : -1;
-
-        int correctedIndex = -1;
-        while (index != endIndex) {
-            correctedIndex = (startIndex + index) % directions.length;
-            if (directions[correctedIndex] > stopDirection.minAngle && directions[correctedIndex] < stopDirection.maxAngle) {
-                distanceWalked += lines[correctedIndex].getLength();
-                if (distanceWalked > glyph.getBoundingBox().getHeight() * serifHeightThreshold) {
-                    break;
-                }
-            } else {
-                distanceWalked = 0;
-            }
-            index += step;
-        }
-
-        return correctedIndex;
     }
 
     private int findIndexOfLineClosestToPoint(Point point) {
@@ -129,26 +119,5 @@ public class SerifExtractor {
         BOTTOM_RIGHT,
         TOP_LEFT,
         TOP_RIGHT
-    }
-
-    private enum StopDirection {
-        WHEN_GOING_UP(45, 135),
-        WHEN_GOING_DOWN(225, 315);
-
-        private final int minAngle;
-        private final int maxAngle;
-
-        StopDirection(int minAngle, int maxAngle) {
-            this.minAngle = minAngle;
-            this.maxAngle = maxAngle;
-        }
-
-        public int getMinAngle() {
-            return minAngle;
-        }
-
-        public int getMaxAngle() {
-            return maxAngle;
-        }
     }
 }
