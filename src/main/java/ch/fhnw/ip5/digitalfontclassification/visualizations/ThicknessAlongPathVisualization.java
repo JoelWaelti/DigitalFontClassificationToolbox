@@ -1,9 +1,8 @@
-package ch.fhnw.ip5.digitalfontclassification.demos;
+package ch.fhnw.ip5.digitalfontclassification.visualizations;
 
-import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.EvenlyDistributedThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.MiddleOfLineThicknessAnalyzer;
-import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
+import ch.fhnw.ip5.digitalfontclassification.domain.Point;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 
 import javax.imageio.ImageIO;
@@ -16,16 +15,15 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
-public class ThicknessAlongPathVisualization2 {
+public class ThicknessAlongPathVisualization {
 
-    // Args: <source path> <target path> <character> <font size> <flatness> <spacing>
+    // Args: <source path> <target path> <character> <font size> <flatness>
     public static void main(String[] args) throws IOException {
         String sourcePath = args[0];
         String targetPath = args[1];
         char character = args[2].charAt(0);
         float fontSize = Float.parseFloat(args[3]);
         double flatness = Double.parseDouble(args[4]);
-        double spacing = Double.parseDouble(args[5]);
 
         PlotUtil.doForEachFontInDirectory(sourcePath, fontPath -> {
             try {
@@ -36,7 +34,7 @@ public class ThicknessAlongPathVisualization2 {
                 Flattener flattener = new JavaAwtFlattener(flatness);
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 
-                BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph, spacing);
+                BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph);
 
                 Path relativePath = Path.of(sourcePath).relativize(fontPath);
                 Path plotFilePath = Path.of(targetPath, relativePath + ".jpg");
@@ -53,7 +51,7 @@ public class ThicknessAlongPathVisualization2 {
         });
     }
 
-    static BufferedImage getVisualizationAsBufferedImage(Glyph glyph, double spacing) {
+    private static BufferedImage getVisualizationAsBufferedImage(Glyph glyph) {
         BufferedImage bi = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = bi.createGraphics();
 
@@ -66,7 +64,7 @@ public class ThicknessAlongPathVisualization2 {
         g2d.translate(0, -bi.getHeight() + tolerance);
 
         drawGlyph(glyph, g2d);
-        drawThicknessLinesWithColorFlow(glyph, spacing, g2d);
+        drawThicknessLinesWithColorFlow(glyph, g2d);
         return bi;
     }
 
@@ -84,17 +82,18 @@ public class ThicknessAlongPathVisualization2 {
         }
     }
 
-    private static void drawThicknessLinesWithColorFlow(Glyph glyph, double spacing, Graphics2D g2d) {
-        List<Line> lines = new EvenlyDistributedThicknessAnalyzer(spacing).computeThicknessLines(glyph);
+    private static void drawThicknessLinesWithColorFlow(Glyph glyph, Graphics2D g2d) {
+        List<Line> lines = new MiddleOfLineThicknessAnalyzer().computeThicknessLines(glyph);
         int totalLines = lines.size();
 
         Point origin = new Point(0,0);
-        Line closestLine = Collections.min(
-            lines,
+        List<Segment> segments = glyph.getContours().getFirst().getSegments();
+        Segment closestSegment = Collections.min(
+            segments,
             (s1, s2) -> (int) (s1.getFrom().distanceTo(origin) - s2.getFrom().distanceTo(origin))
         );
-        int closestLineIndex = lines.indexOf(closestLine);
-        Collections.rotate(lines, -closestLineIndex);
+        int closestSegmentIndex = segments.indexOf(closestSegment);
+        Collections.rotate(lines, -closestSegmentIndex);
 
         for (int i = 0; i < totalLines; i++) {
             Line line = lines.get(i);
@@ -104,6 +103,16 @@ public class ThicknessAlongPathVisualization2 {
             Color color = Color.getHSBColor(hue, 1.0f, 1.0f);
             g2d.setColor(color);
 
+            Point from = line.getFrom();
+            Point to = line.getTo();
+            g2d.drawLine((int) from.x(), (int) from.y(), (int) to.x(), (int) to.y());
+        }
+    }
+
+    private static void drawThicknessLines(Glyph glyph, Graphics2D g2d) {
+        List<Line> lines = new MiddleOfLineThicknessAnalyzer().computeThicknessLines(glyph);
+        g2d.setColor(Color.RED);
+        for(Line line : lines) {
             Point from = line.getFrom();
             Point to = line.getTo();
             g2d.drawLine((int) from.x(), (int) from.y(), (int) to.x(), (int) to.y());

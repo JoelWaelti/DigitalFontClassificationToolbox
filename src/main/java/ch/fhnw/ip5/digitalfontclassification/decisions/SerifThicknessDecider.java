@@ -1,4 +1,4 @@
-package ch.fhnw.ip5.digitalfontclassification.demos;
+package ch.fhnw.ip5.digitalfontclassification.decisions;
 
 import ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.analysis.SerifThicknessAnalyzer;
