@@ -16,14 +16,25 @@ public class SerifThicknessAnalyzer {
     private static final double SERIF_HEIGHT_THRESHOLD = 0.2;
     private static final double SERIF_HAIRLINE_DIFFERENCE_THRESHOLD = 0.5;
 
-    public List<Line> hairlineThicknessLines = null;
-    public List<Line> serifThicknessLines = null;
+    private final Glyph glyph;
 
-    // implementation assumes: - hairline thickness >= serif thickness
-    //                         - first contour is main enclosing contour
-    public boolean serifThicknessIsSmallerThanHairLineThickness(Glyph glyph) {
+    private List<Line> hairlineThicknessLines;
+    private List<Line> serifThicknessLines;
+    private List<Line> stemThicknessLines;
+    private List<Line> hairlineLines;
+    private List<List<Line>> serifs;
+    private double averageHairlineThickness;
+    private double averageSerifThickness;
+    private double averageStemThickness;
+
+    public SerifThicknessAnalyzer(Glyph glyph) {
+        this.glyph = glyph;
+        init();
+    }
+
+    private void init() {
         SerifExtractor serifExtractor = new SerifExtractor(glyph, SERIF_HEIGHT_THRESHOLD);
-        List<List<Line>> serifs = serifExtractor.getAllSerifs();
+        serifs = serifExtractor.getAllSerifs();
 
         ThicknessAnalyzer.ThicknessLineFilter<Line, Line, Line> filter = (line, intersectingLine, thicknessLine) -> {
             double angle = thicknessLine.angleTo(intersectingLine);
@@ -34,20 +45,27 @@ public class SerifThicknessAnalyzer {
         double summedSerifHeight = 0;
         double numSerifThicknessLines = 0;
         serifThicknessLines = new ArrayList<>();
+        stemThicknessLines = new ArrayList<>();
         for(List<Line> s : serifs) {
             List<Line> verticalThicknessLines = thicknessAnalyzer
                     .computeThicknessLines(s, s)
                     .stream()
-                    .filter(this::isVerticalish)
+                    .filter(Line::isVerticalish)
                     .toList();
             serifThicknessLines.addAll(verticalThicknessLines);
+
+            List<Line> currentStemLines = new ArrayList<>();
+            currentStemLines.add(s.getFirst());
+            currentStemLines.add(s.getLast());
+            stemThicknessLines.addAll(thicknessAnalyzer.computeThicknessLines(currentStemLines, currentStemLines));
+
             summedSerifHeight += verticalThicknessLines.stream().mapToDouble(Line::getLength).sum();
             numSerifThicknessLines += verticalThicknessLines.size();
         }
-        double averageSerifThickness = summedSerifHeight / numSerifThicknessLines;
+        averageSerifThickness = summedSerifHeight / numSerifThicknessLines;
 
         // get all lines of glyph that are not from the serif
-        List<Line> hairlineLines = glyph.getContours().getFirst().getSegments().stream()
+        hairlineLines = glyph.getContours().getFirst().getSegments().stream()
                 .filter(segment -> serifs.stream().noneMatch(serif -> serif.contains(segment)))
                 .map(s -> (Line)s)
                 .toList();
@@ -55,14 +73,25 @@ public class SerifThicknessAnalyzer {
         hairlineThicknessLines = thicknessAnalyzer
                 .computeThicknessLines(hairlineLines, hairlineLines)
                 .stream()
-                .filter(this::isVerticalish)
+                .filter(Line::isVerticalish)
                 .toList();
-        double averageHairlineThickness = hairlineThicknessLines.stream()
+        averageHairlineThickness = hairlineThicknessLines.stream()
                 .mapToDouble(Line::getLength)
                 .average()
                 .getAsDouble();
 
+        averageStemThickness = stemThicknessLines.stream()
+                .mapToDouble(Line::getLength)
+                .average()
+                .getAsDouble();
+    }
+
+    public boolean serifThicknessIsSmallerThanHairLineThickness() {
         return averageSerifThickness + SERIF_HAIRLINE_DIFFERENCE_THRESHOLD * averageHairlineThickness < averageHairlineThickness;
+    }
+
+    public double getSerifThicknessToStemThicknessRatio() {
+        return averageSerifThickness / averageStemThickness;
     }
 
     public List<Line> getFilteredLines(Glyph glyph) {
@@ -71,7 +100,7 @@ public class SerifThicknessAnalyzer {
 
         // filter verticalish lines and filter out lines from stem
         return lines.stream()
-                .filter(this::isVerticalish)
+                .filter(Line::isVerticalish)
                 .filter(l -> !isFromStem(l, glyph.getBoundingBox()))
                 .toList();
     }
@@ -86,40 +115,15 @@ public class SerifThicknessAnalyzer {
         return new EvenlyDistributedThicknessAnalyzer(THICKNESS_LINE_SPACING, filter);
     }
 
-    private boolean isVerticalish(Line line) {
-        Point from = line.getFrom();
-        Point to = line.getTo();
-
-        double deltaX = Math.abs(to.x() - from.x());
-        double deltaY = Math.abs(to.y() - from.y());
-
-        return deltaY >= deltaX;
-    }
-
     private boolean isFromStem(Line line, BoundingBox bb) {
         return line.getLength() > bb.getHeight() / 4;
     }
 
-    // calculates the counter-clockwise angle of the vector to the x-axis
-    private double ccwAngleWithXAxis(Vector v) {
-        double angleRad = Math.atan2(v.y(), v.x());
-        // Adjust angle to be in the range [0, 2π)
-        if (angleRad < 0) {
-            angleRad += 2 * Math.PI;
-        }
-        return Math.toDegrees(angleRad);
+    public List<Line> getHairlineThicknessLines() {
+        return hairlineThicknessLines;
     }
 
-    private double findMedian(double[] numbers) {
-        Arrays.sort(numbers); // Sort the array
-
-        int length = numbers.length;
-        if (length % 2 == 0) {
-            // If the length is even, return the average of the two middle elements
-            return (numbers[length / 2 - 1] + numbers[length / 2]) / 2.0;
-        } else {
-            // If the length is odd, return the middle element
-            return numbers[length / 2];
-        }
+    public List<Line> getSerifThicknessLines() {
+        return serifThicknessLines;
     }
 }

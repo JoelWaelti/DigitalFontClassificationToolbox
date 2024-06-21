@@ -36,16 +36,18 @@ public class SerifThicknessDecider {
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 
                 if(SerifAnalyzer.hasSerif(flattenedGlyph, spacing, serifHeightThreshold)) {
-                    SerifThicknessAnalyzer analyzer = new SerifThicknessAnalyzer();
+                    SerifThicknessAnalyzer analyzer = new SerifThicknessAnalyzer(flattenedGlyph);
                     System.out.println(
                             fontPath.getParent().getFileName()
                             + "\t" +
                             fontPath.getFileName()
                             + "\t" +
-                            analyzer.serifThicknessIsSmallerThanHairLineThickness(flattenedGlyph)
+                            analyzer.serifThicknessIsSmallerThanHairLineThickness()
+                            + "\t" +
+                            (analyzer.getSerifThicknessToStemThicknessRatio() > 0.5)
                     );
 
-                    saveImageWithGlyphAndLines(flattenedGlyph, analyzer.serifThicknessLines, analyzer.hairlineThicknessLines, Path.of(targetPath, fontPath.getFileName().toString() + ".png"));
+                    saveImageWithGlyphAndLines(flattenedGlyph, analyzer.getSerifThicknessLines(), analyzer.getHairlineThicknessLines(), Path.of(targetPath, fontPath.getFileName().toString() + ".png"));
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);

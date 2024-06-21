@@ -87,4 +87,14 @@ public class Line extends Segment {
     public boolean isHorizontal() {
         return getFrom().y() == getTo().y();
     }
+
+    public boolean isVerticalish() {
+        Point from = this.getFrom();
+        Point to = this.getTo();
+
+        double deltaX = Math.abs(to.x() - from.x());
+        double deltaY = Math.abs(to.y() - from.y());
+
+        return deltaY >= deltaX;
+    }
 }
