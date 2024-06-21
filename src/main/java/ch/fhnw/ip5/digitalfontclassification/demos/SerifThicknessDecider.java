@@ -12,6 +12,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SerifThicknessDecider {
     private static char character;
@@ -28,31 +29,50 @@ public class SerifThicknessDecider {
         targetPath = args[5];
         String sourcePath = args[6];
 
+        AtomicInteger c = new AtomicInteger();
+
         PlotUtil.doForEachFontInDirectory(sourcePath, fontPath -> {
             try {
+                System.out.println(c.incrementAndGet());
                 FontParser parser = new JavaAwtFontParser(fontPath.toString());
                 Glyph glyph = parser.getGlyph(character, fontSize);
                 Flattener flattener = new JavaAwtFlattener(flatness);
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 
-                if(SerifAnalyzer.hasSerif(flattenedGlyph, spacing, serifHeightThreshold)) {
-                    SerifThicknessAnalyzer analyzer = new SerifThicknessAnalyzer(flattenedGlyph);
-                    System.out.println(
-                            fontPath.getParent().getFileName()
-                            + "\t" +
-                            fontPath.getFileName()
-                            + "\t" +
-                            analyzer.serifThicknessIsSmallerThanHairLineThickness()
-                            + "\t" +
-                            (analyzer.getSerifThicknessToStemThicknessRatio() > 0.5)
-                    );
+                SerifThicknessAnalyzer analyzer = new SerifThicknessAnalyzer(flattenedGlyph);
 
+                boolean hasSerif = SerifAnalyzer.hasSerif(flattenedGlyph, spacing, serifHeightThreshold);
+                boolean serifThicknessIsSmallerThanHairLineThickness = analyzer.serifThicknessIsSmallerThanHairLineThickness();
+                boolean isEgyptienne = analyzer.getSerifThicknessToStemThicknessRatio() > 0.5;
+
+                /*if(hasSerif) {
                     saveImageWithGlyphAndLines(flattenedGlyph, analyzer.getSerifThicknessLines(), analyzer.getHairlineThicknessLines(), Path.of(targetPath, fontPath.getFileName().toString() + ".png"));
-                }
+                }*/
+
+                printResult(
+                        fontPath,
+                        hasSerif,
+                        serifThicknessIsSmallerThanHairLineThickness,
+                        isEgyptienne
+                );
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    private static void printResult(Path fontPath, boolean hasSerif, boolean serifThicknessIsSmallerThanHairLineThickness, boolean isEgyptienne) {
+        System.out.println(
+                    fontPath.getParent().getFileName()
+                    + "\t" +
+                    fontPath.getFileName()
+                    + "\t" +
+                    hasSerif
+                    + "\t" +
+                    serifThicknessIsSmallerThanHairLineThickness
+                    + "\t" +
+                    isEgyptienne
+        );
     }
 
     private static void saveImageWithGlyphAndLines(Glyph glyph, List<Line> serifLines, List<Line> hairlineLines, Path filePath) throws IOException {
