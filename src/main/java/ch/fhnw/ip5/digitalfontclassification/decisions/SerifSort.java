@@ -1,9 +1,5 @@
-package ch.fhnw.ip5.digitalfontclassification.demos;
+package ch.fhnw.ip5.digitalfontclassification.decisions;
 
-import ch.fhnw.ip5.digitalfontclassification.analysis.SerifExtractor;
-import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.EvenlyDistributedThicknessAnalyzer;
-import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.MiddleOfLineThicknessAnalyzer;
-import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.ThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.Contour;
 import ch.fhnw.ip5.digitalfontclassification.domain.Flattener;
 import ch.fhnw.ip5.digitalfontclassification.domain.FontParser;
@@ -28,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer.ccwAngleWithXAxis;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.analyzeSerifs;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.getVerticalLines;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.hasSerif;

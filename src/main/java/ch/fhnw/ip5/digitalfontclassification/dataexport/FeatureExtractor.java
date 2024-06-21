@@ -1,6 +1,5 @@
-package ch.fhnw.ip5.digitalfontclassification.demos;
+package ch.fhnw.ip5.digitalfontclassification.dataexport;
 import ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer;
-import ch.fhnw.ip5.digitalfontclassification.analysis.SlopeAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.MiddleOfLineThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.Contour;
 import ch.fhnw.ip5.digitalfontclassification.domain.Flattener;

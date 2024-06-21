@@ -1,6 +1,6 @@
-package ch.fhnw.ip5.digitalfontclassification.demos;
+package ch.fhnw.ip5.digitalfontclassification.visualizations;
 
-import ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer;
+import ch.fhnw.ip5.digitalfontclassification.analysis.SlopeAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.*;
 import ch.fhnw.ip5.digitalfontclassification.plot.PlotUtil;
 import org.jfree.chart.ChartUtilities;
@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class ContourDirectionPlot {
+public class SlopeAlongContourPlot {
     public static void main(String[] args) throws IOException {
         String sourcePath = args[0];
         String targetPath = args[1];
@@ -47,13 +47,13 @@ public class ContourDirectionPlot {
         // it's assumed that the first contour is the main enclosing contour of the glyph
         Point origin = new Point(0,0);
         Contour contour = flattenedGlyph.getContours().getFirst().moveStartPointToSegmentClosestTo(origin);
-        double[] directions = ContourDirectionAnalyzer.getDirectionsAlongContour(contour);
+        double[] slopes = SlopeAnalyzer.getSlopesAlongContour(contour);
 
         return PlotUtil.getBarChart(
                 parser.getFontName() + ": " + character,
                 "Segment Nr.",
-                "Direction in Degrees",
-                directions
+                "Slope",
+                slopes
         );
     }
 }

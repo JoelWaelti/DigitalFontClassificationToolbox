@@ -1,4 +1,4 @@
-package ch.fhnw.ip5.digitalfontclassification.demos;
+package ch.fhnw.ip5.digitalfontclassification.visualizations;
 
 import ch.fhnw.ip5.digitalfontclassification.domain.Flattener;
 import ch.fhnw.ip5.digitalfontclassification.domain.FontParser;

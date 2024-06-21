@@ -1,4 +1,4 @@
-package ch.fhnw.ip5.digitalfontclassification.demos;
+package ch.fhnw.ip5.digitalfontclassification.decisions;
 
 import ch.fhnw.ip5.digitalfontclassification.domain.Flattener;
 import ch.fhnw.ip5.digitalfontclassification.domain.FontParser;
@@ -21,7 +21,7 @@ import java.util.Map;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.analyzeSerifs;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.hasSerif;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.isParallel;
-import static ch.fhnw.ip5.digitalfontclassification.demos.SerifSort.getVisualizationAsBufferedImage;
+import static ch.fhnw.ip5.digitalfontclassification.decisions.SerifSort.getVisualizationAsBufferedImage;
 
 public class IsParallelDecider {
     // Args: <source path> <target path1> <target path2> <character> <font size> <flatness> <spacing>
