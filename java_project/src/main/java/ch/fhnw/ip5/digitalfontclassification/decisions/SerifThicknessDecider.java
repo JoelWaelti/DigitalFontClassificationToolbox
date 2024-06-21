@@ -45,9 +45,9 @@ public class SerifThicknessDecider {
                 boolean serifThicknessIsSmallerThanHairLineThickness = analyzer.serifThicknessIsSmallerThanHairLineThickness();
                 boolean isEgyptienne = analyzer.getSerifThicknessToStemThicknessRatio() > 0.5;
 
-                /*if(hasSerif) {
+                if(hasSerif) {
                     saveImageWithGlyphAndLines(flattenedGlyph, analyzer.getSerifThicknessLines(), analyzer.getHairlineThicknessLines(), Path.of(targetPath, fontPath.getFileName().toString() + ".png"));
-                }*/
+                }
 
                 printResult(
                         fontPath,
