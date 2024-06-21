@@ -54,7 +54,7 @@ public class SerifSort {
                     Flattener flattener = new JavaAwtFlattener(flatness);
                     Glyph flattenedGlyph = flattener.flatten(glyph);
 
-                    Map<String, List<Line>> allSerifLines = analyzeSerifs(glyph, 0.2, spacing);
+                    Map<String, List<Line>> allSerifLines = analyzeSerifs(flattenedGlyph, 0.2, spacing);
 
                     List<Line> seriflinesHorizontal = allSerifLines.get("seriflinesHorizontal");
                     List<Line> stammlinesHorizontal = allSerifLines.get("stammlinesHorizontal");

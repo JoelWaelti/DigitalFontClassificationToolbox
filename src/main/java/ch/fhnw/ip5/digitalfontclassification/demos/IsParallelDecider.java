@@ -1,8 +1,5 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
 
-import ch.fhnw.ip5.digitalfontclassification.analysis.SerifExtractor;
-import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.EvenlyDistributedThicknessAnalyzer;
-import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.ThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.Flattener;
 import ch.fhnw.ip5.digitalfontclassification.domain.FontParser;
 import ch.fhnw.ip5.digitalfontclassification.domain.Glyph;
@@ -21,9 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer.ccwAngleWithXAxis;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.analyzeSerifs;
-import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.getVerticalLines;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.hasSerif;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.isParallel;
 import static ch.fhnw.ip5.digitalfontclassification.demos.SerifSort.getVisualizationAsBufferedImage;
@@ -48,7 +43,7 @@ public class IsParallelDecider {
                 Flattener flattener = new JavaAwtFlattener(flatness);
                 Glyph flattenedGlyph = flattener.flatten(glyph);
 
-                Map<String, List<Line>> allSerifLines = analyzeSerifs(glyph, 0.2, spacing);
+                Map<String, List<Line>> allSerifLines = analyzeSerifs(flattenedGlyph, 0.2, spacing);
 
                 List<Line> seriflinesHorizontal = allSerifLines.get("seriflinesHorizontal");
                 List<Line> stammlinesHorizontal = allSerifLines.get("stammlinesHorizontal");

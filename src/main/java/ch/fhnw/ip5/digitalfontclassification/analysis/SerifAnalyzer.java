@@ -129,7 +129,7 @@ public class SerifAnalyzer {
             .average().orElse(Double.MIN_VALUE);
 
         double range = maxHorizontalThicknesses - stammThickness;
-        return !(range > 1.0);
+        return !(range > 0.0);
     }
 
 }
