@@ -1,4 +1,5 @@
 package ch.fhnw.ip5.digitalfontclassification.demos;
+import ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.analysis.SlopeAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.analysis.thickness.MiddleOfLineThicknessAnalyzer;
 import ch.fhnw.ip5.digitalfontclassification.domain.Contour;
@@ -44,7 +45,7 @@ public class FeatureExtractor {
                 writer.append("Directory,FontName");
                 for (int i = 0; i < maxLineCount; i++) {
                     writer.append(",Length").append(String.valueOf(i)).append(",Thickness").append(String.valueOf(i))
-                        .append(",Slope").append(String.valueOf(i));
+                        .append(",Direction").append(String.valueOf(i));
                 }
                 writer.append('\n');
             }
@@ -70,12 +71,12 @@ public class FeatureExtractor {
                     lineSegments = flattenedGlyph.getContours().getFirst().moveStartPointToSegmentClosestTo(origin).getSegments();
 
                     Contour contour = flattenedGlyph.getContours().getFirst().moveStartPointToSegmentClosestTo(origin);
-                    double[] slopes = SlopeAnalyzer.getSlopesAlongContour(contour);
+                    double[] directions = ContourDirectionAnalyzer.getDirectionsAlongContour(contour);
 
                     String directoryName = fontPath.getParent().getFileName().toString();
                     String fontName = Paths.get(fontPath.toString()).getFileName().toString();
 
-                    writeFeaturesToCsv(lineSegments, thicknesses, slopes, writer, directoryName, fontName, maxLineCount);
+                    writeFeaturesToCsv(lineSegments, thicknesses, directions, writer, directoryName, fontName, maxLineCount);
                 } catch (IOException | FontParserException e) {
                     e.printStackTrace();
                 }
@@ -83,7 +84,7 @@ public class FeatureExtractor {
         }
     }
 
-    private static void writeFeaturesToCsv(List<Segment> lines, List<Double> thicknesses, double[] slopes, FileWriter writer, String directoryName, String fontName, int maxLineCount) throws IOException {
+    private static void writeFeaturesToCsv(List<Segment> lines, List<Double> thicknesses, double[] directions, FileWriter writer, String directoryName, String fontName, int maxLineCount) throws IOException {
         System.out.println(directoryName + ": " + fontName);
         // Writing the directory name and font name
         writer.append(directoryName)
@@ -100,14 +101,14 @@ public class FeatureExtractor {
                     .append(',')
                     .append(thicknesses.get(i).toString())
                     .append(',')
-                    .append(Double.toString(slopes[i]));
+                    .append(Double.toString(directions[i]));
             } else {
                 writer.append(',')
                     .append("-1")
                     .append(',')
                     .append("-1")
                     .append(',')
-                    .append("0");
+                    .append("-1");
             }
         }
 

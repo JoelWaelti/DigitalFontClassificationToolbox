@@ -38,7 +38,7 @@ public class SerifThicknessAnalyzer {
             List<Line> verticalThicknessLines = thicknessAnalyzer
                     .computeThicknessLines(s, s)
                     .stream()
-                    .filter(this::isVerticalish)
+                    .filter(Line::isVerticalish)
                     .toList();
             serifThicknessLines.addAll(verticalThicknessLines);
             summedSerifHeight += verticalThicknessLines.stream().mapToDouble(Line::getLength).sum();
@@ -55,7 +55,7 @@ public class SerifThicknessAnalyzer {
         hairlineThicknessLines = thicknessAnalyzer
                 .computeThicknessLines(hairlineLines, hairlineLines)
                 .stream()
-                .filter(this::isVerticalish)
+                .filter(Line::isVerticalish)
                 .toList();
         double averageHairlineThickness = hairlineThicknessLines.stream()
                 .mapToDouble(Line::getLength)
@@ -71,7 +71,7 @@ public class SerifThicknessAnalyzer {
 
         // filter verticalish lines and filter out lines from stem
         return lines.stream()
-                .filter(this::isVerticalish)
+                .filter(Line::isVerticalish)
                 .filter(l -> !isFromStem(l, glyph.getBoundingBox()))
                 .toList();
     }
@@ -84,16 +84,6 @@ public class SerifThicknessAnalyzer {
         };
 
         return new EvenlyDistributedThicknessAnalyzer(THICKNESS_LINE_SPACING, filter);
-    }
-
-    private boolean isVerticalish(Line line) {
-        Point from = line.getFrom();
-        Point to = line.getTo();
-
-        double deltaX = Math.abs(to.x() - from.x());
-        double deltaY = Math.abs(to.y() - from.y());
-
-        return deltaY >= deltaX;
     }
 
     private boolean isFromStem(Line line, BoundingBox bb) {

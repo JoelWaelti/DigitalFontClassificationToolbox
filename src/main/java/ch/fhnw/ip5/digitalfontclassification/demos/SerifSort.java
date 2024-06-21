@@ -26,8 +26,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static ch.fhnw.ip5.digitalfontclassification.analysis.ContourDirectionAnalyzer.ccwAngleWithXAxis;
+import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.analyzeSerifs;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.getVerticalLines;
 import static ch.fhnw.ip5.digitalfontclassification.analysis.SerifAnalyzer.hasSerif;
 
@@ -52,68 +54,11 @@ public class SerifSort {
                     Flattener flattener = new JavaAwtFlattener(flatness);
                     Glyph flattenedGlyph = flattener.flatten(glyph);
 
-                    SerifExtractor serifExtractor = new SerifExtractor(flattenedGlyph, 0.2);
-                    List<List<Line>> serifs = serifExtractor.getAllSerifs();
+                    Map<String, List<Line>> allSerifLines = analyzeSerifs(glyph, 0.2, spacing);
 
-                    List<List<Line>> serifsBottom = new ArrayList<>();
-                    List<Line>  bottomLeft = serifExtractor.getSerifAt(SerifExtractor.SerifLocation.BOTTOM_LEFT);
-                    List<Line>  bottomRight = serifExtractor.getSerifAt(SerifExtractor.SerifLocation.BOTTOM_RIGHT);
-                    serifsBottom.add(bottomLeft);
-                    serifsBottom.add(bottomRight);
-
-                    List<List<Line>> serifsTop = new ArrayList<>();
-                    List<Line>  topRight = serifExtractor.getSerifAt(SerifExtractor.SerifLocation.TOP_RIGHT);
-                    List<Line>  topLeft = serifExtractor.getSerifAt(SerifExtractor.SerifLocation.TOP_LEFT);
-                    serifsTop.add(topLeft);
-                    serifsTop.add(topRight);
-
-                    ThicknessAnalyzer.ThicknessLineFilter<Line, Line, Line> filterBottom = (line, intersectingLine, thicknessLine) -> {
-                        double ccangleLine = ccwAngleWithXAxis(line.toVector());
-                        double angle = thicknessLine.angleTo(intersectingLine);
-                        return angle > 45 && (ccangleLine >= 90 && 270 >= ccangleLine);
-                    };
-
-                    ThicknessAnalyzer.ThicknessLineFilter<Line, Line, Line> filterTop = (line, intersectingLine, thicknessLine) -> {
-                        double ccangleLine = ccwAngleWithXAxis(line.toVector());
-                        double angle = thicknessLine.angleTo(intersectingLine);
-                        return angle > 45 && !(ccangleLine >= 90 && 270 >= ccangleLine);
-                    };
-
-
-                    List<Line> serifLines = new ArrayList<>();
-                    List<Line> stammlinesHorizontal = new ArrayList<>();
-                    List<Line> seriflinesHorizontal = new ArrayList<>();
-
-                    for(List<Line> serif : serifs) {
-                        List<Line> thicknessLinesOfSerif = new ArrayList<>();
-
-                        if(serifsBottom.contains(serif)) {
-                            thicknessLinesOfSerif = new EvenlyDistributedThicknessAnalyzer(spacing, filterBottom).computeThicknessLines(serif, serif);
-                        }
-
-                        if(serifsTop.contains(serif)) {
-                            thicknessLinesOfSerif = new EvenlyDistributedThicknessAnalyzer(spacing, filterTop).computeThicknessLines(serif, serif);
-                        }
-
-                        serifLines.addAll(thicknessLinesOfSerif);
-
-                        if(serif.size() > 2) {
-                            List<Line> stamm = new ArrayList<>();
-                            List<Line> partOfSerif = new ArrayList<>();
-
-                            stamm.add(serif.get(0));
-                            for (int i = 1; i < serif.size() - 1; i++) {
-                                partOfSerif.add(serif.get(i));
-                            }
-                            stamm.add(serif.get(serif.size() - 1));
-
-                            List<Line> thicknessLinesOfStamm = new EvenlyDistributedThicknessAnalyzer(spacing).computeHorizontalLines(stamm, stamm);
-                            List<Line> horizontalLinesOfSerif = new MiddleOfLineThicknessAnalyzer().computeHorizontalLines(partOfSerif, serif);
-
-                            seriflinesHorizontal.addAll(horizontalLinesOfSerif);
-                            stammlinesHorizontal.addAll(thicknessLinesOfStamm);
-                        }
-                    }
+                    List<Line> seriflinesHorizontal = allSerifLines.get("seriflinesHorizontal");
+                    List<Line> stammlinesHorizontal = allSerifLines.get("stammlinesHorizontal");
+                    List<Line> serifLines = allSerifLines.get("serifLines");
 
                     List<Line> verticalThicknesses = getVerticalLines(serifLines);
                     List<Line> linesToDraw = new ArrayList<>();
@@ -123,7 +68,7 @@ public class SerifSort {
 
                     BufferedImage bufferedImage = getVisualizationAsBufferedImage(flattenedGlyph, linesToDraw);
 
-                    if(hasSerif(seriflinesHorizontal, stammlinesHorizontal, serifLines)) {
+                    if(hasSerif(flattenedGlyph, (int) spacing, 0.2)) {
                         Path relativePath = Path.of(sourcePath).relativize(fontPath);
                         Path plotFilePath = Path.of(targetPath1, relativePath + ".jpg");
                         File plotFile = plotFilePath.toFile();
@@ -150,7 +95,7 @@ public class SerifSort {
             });
         }
 
-    static BufferedImage getVisualizationAsBufferedImage(Glyph glyph, List<Line> serifLines) {
+    public static BufferedImage getVisualizationAsBufferedImage(Glyph glyph, List<Line> serifLines) {
         BufferedImage bi = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = bi.createGraphics();
 
